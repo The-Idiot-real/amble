@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { FileCard, FileData } from "@/components/FileCard";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Upload, Sparkles } from "lucide-react";
+import { ArrowRight, Upload, Sparkles, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -109,7 +109,7 @@ const Index = () => {
   const handleShare = (fileId: string) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
-      navigator.clipboard.writeText(`https://sharewell.app/file/${fileId}`);
+      navigator.clipboard.writeText(`https://amble.app/file/${fileId}`);
       toast({
         title: "Link Copied",
         description: `Share link for ${file.name} copied to clipboard!`,
@@ -126,13 +126,13 @@ const Index = () => {
         <section className="py-20 px-6 text-center">
           <div className="container mx-auto max-w-4xl">
             <div className="mb-8">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6">
-                Share Files <span className="gradient-text">Beautifully</span>
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Upload, share, and manage your files with our modern, secure platform. 
-                Beautiful design meets powerful functionality.
-              </p>
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              Share Files <span className="gradient-text">Beautifully</span>
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Upload, share, convert, and manage your files with our modern, secure platform. 
+              Beautiful design meets powerful functionality.
+            </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent">
                   <Link to="/upload">
@@ -141,6 +141,12 @@ const Index = () => {
                   </Link>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
+                  <Link to="/convert">
+                    <RefreshCw className="w-5 h-5 mr-2" />
+                    Convert Files
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="lg" asChild>
                   <Link to="/about">
                     Learn More
                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -197,7 +203,7 @@ const Index = () => {
             <div className="file-card max-w-2xl mx-auto">
               <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
               <p className="text-muted-foreground mb-6">
-                Join thousands of users who trust ShareWell for their file sharing needs.
+                Join thousands of users who trust Amble for their file sharing and conversion needs.
               </p>
               <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent">
                 <Link to="/upload">

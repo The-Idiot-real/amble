@@ -15,8 +15,8 @@ const About = () => {
     },
     {
       icon: Users,
-      title: "Easy Sharing",
-      description: "Share files with anyone, anywhere. Generate secure links or collaborate with teams."
+      title: "Easy Sharing & Converting",
+      description: "Share files with anyone, anywhere. Convert between formats instantly with our powerful conversion engine."
     },
     {
       icon: Heart,
@@ -34,12 +34,12 @@ const About = () => {
           {/* Hero Section */}
           <div className="text-center mb-16">
             <h1 className="text-5xl font-bold mb-6">
-              About <span className="gradient-text">ShareWell</span>
+              About <span className="gradient-text">Amble</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              ShareWell is a modern file sharing platform designed to make sharing and collaborating 
-              on files as simple and secure as possible. Whether you're working with a team or 
-              sharing with friends, we've got you covered.
+              Amble is a modern file sharing and conversion platform designed to make sharing, 
+              converting, and collaborating on files as simple and secure as possible. Whether you're 
+              working with a team or sharing with friends, we've got you covered.
             </p>
           </div>
 
@@ -61,14 +61,14 @@ const About = () => {
             <div className="file-card max-w-3xl mx-auto">
               <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                We believe that sharing files should be effortless, secure, and accessible to everyone. 
+                We believe that sharing and converting files should be effortless, secure, and accessible to everyone. 
                 Our mission is to break down barriers and make collaboration seamless, whether you're 
                 a student sharing notes, a professional collaborating on projects, or a creative 
                 sharing your work with the world.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                Built with modern web technologies and a focus on user experience, ShareWell 
-                represents the future of file sharing - simple, beautiful, and powerful.
+                Built with modern web technologies and a focus on user experience, Amble 
+                represents the future of file sharing and conversion - simple, beautiful, and powerful.
               </p>
             </div>
           </div>

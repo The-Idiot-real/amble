@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Upload, Menu, X } from "lucide-react";
+import { Search, Upload, Menu, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,9 +26,9 @@ export const Header = ({ onSearch }: HeaderProps) => {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">SW</span>
+              <span className="text-primary-foreground font-bold text-sm">A</span>
             </div>
-            <span className="text-xl font-bold gradient-text">ShareWell</span>
+            <span className="text-xl font-bold gradient-text">Amble</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -48,6 +48,14 @@ export const Header = ({ onSearch }: HeaderProps) => {
               }`}
             >
               Upload
+            </Link>
+            <Link 
+              to="/convert" 
+              className={`font-medium transition-colors hover:text-primary ${
+                isActive('/convert') ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              Convert
             </Link>
             <Link 
               to="/about" 
@@ -104,6 +112,13 @@ export const Header = ({ onSearch }: HeaderProps) => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Upload
+              </Link>
+              <Link 
+                to="/convert" 
+                className="font-medium text-muted-foreground hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Convert
               </Link>
               <Link 
                 to="/about" 

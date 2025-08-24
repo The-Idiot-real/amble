@@ -94,7 +94,7 @@ const Upload = () => {
               <span className="gradient-text">Upload Your Files</span>
             </h1>
             <p className="text-xl text-muted-foreground">
-              Share your files with the world. Drag and drop or click to upload.
+              Share and convert your files with the world. Drag and drop or click to upload.
             </p>
           </div>
 
