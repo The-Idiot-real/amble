@@ -1,32 +1,24 @@
 import { Header } from "@/components/Header";
 import { Shield, Zap, Users, Heart } from "lucide-react";
-
 const About = () => {
-  const features = [
-    {
-      icon: Shield,
-      title: "Secure & Private",
-      description: "Your files are encrypted and stored securely. We never access your private data."
-    },
-    {
-      icon: Zap,
-      title: "Lightning Fast",
-      description: "Upload and download files at blazing speeds with our optimized infrastructure."
-    },
-    {
-      icon: Users,
-      title: "Easy Sharing & Converting",
-      description: "Share files with anyone, anywhere. Convert between formats instantly with our powerful conversion engine."
-    },
-    {
-      icon: Heart,
-      title: "Made with Love",
-      description: "Built by developers who care about user experience and data privacy."
-    }
-  ];
-
-  return (
-    <div className="min-h-screen">
+  const features = [{
+    icon: Shield,
+    title: "Secure & Private",
+    description: "Your files are encrypted and stored securely. We never access your private data."
+  }, {
+    icon: Zap,
+    title: "Lightning Fast",
+    description: "Upload and download files at blazing speeds with our optimized infrastructure."
+  }, {
+    icon: Users,
+    title: "Easy Sharing & Converting",
+    description: "Share files with anyone, anywhere. Convert between formats instantly with our powerful conversion engine."
+  }, {
+    icon: Heart,
+    title: "Made with Love",
+    description: "Built by developers who care about user experience and data privacy."
+  }];
+  return <div className="min-h-screen">
       <Header />
       
       <main className="container mx-auto px-6 py-12">
@@ -45,21 +37,19 @@ const About = () => {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-2 gap-8 mb-16">
-            {features.map((feature, index) => (
-              <div key={index} className="file-card text-center">
+            {features.map((feature, index) => <div key={index} className="file-card text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <feature.icon className="w-8 h-8 text-primary-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
 
           {/* Mission Section */}
           <div className="text-center">
             <div className="file-card max-w-3xl mx-auto">
-              <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
+              <h2 className="text-3xl font-bold mb-6">Our Members</h2>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 We believe that sharing and converting files should be effortless, secure, and accessible to everyone. 
                 Our mission is to break down barriers and make collaboration seamless, whether you're 
@@ -94,8 +84,6 @@ const About = () => {
           </div>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default About;
