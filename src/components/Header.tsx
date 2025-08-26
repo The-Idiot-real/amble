@@ -4,6 +4,8 @@ import { Search, Upload, Menu, X, RefreshCw, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/ThemeProvider";
+import ambleLogoDark from "@/assets/amble-logo-dark.png";
+import ambleLogoLight from "@/assets/amble-logo-light.png";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -27,9 +29,11 @@ export const Header = ({ onSearch }: HeaderProps) => {
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">A</span>
-            </div>
+            <img 
+              src={theme === "dark" ? ambleLogoDark : ambleLogoLight} 
+              alt="Amble Logo" 
+              className="w-8 h-8"
+            />
             <span className="text-xl font-bold gradient-text">Amble</span>
           </Link>
 

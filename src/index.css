@@ -19,9 +19,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 84% 4.9%;
 
-    /* Blue to purple gradient theme */
-    --primary: 239 84% 67%;
-    --primary-dark: 243 75% 59%;
+    /* Blue to green gradient theme */
+    --primary: 197 55% 46%;
+    --primary-dark: 197 55% 36%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14.3% 95.9%;
@@ -30,7 +30,7 @@
     --muted: 220 14.3% 95.9%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 264 83% 70%;
+    --accent: 145 64% 52%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -38,7 +38,7 @@
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 239 84% 67%;
+    --ring: 197 55% 46%;
 
     --radius: 0.75rem;
 
@@ -80,8 +80,8 @@
     --popover: 222 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 239 84% 67%;
-    --primary-dark: 243 75% 59%;
+    --primary: 197 55% 46%;
+    --primary-dark: 197 55% 36%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -90,7 +90,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 264 83% 70%;
+    --accent: 145 64% 52%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
@@ -98,7 +98,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 239 84% 67%;
+    --ring: 197 55% 46%;
 
     /* Dark mode gradients and shadows */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));

@@ -51,14 +51,14 @@ const Upload = () => {
     // Process each file
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      const fileIndex = files.length + i;
-
+      
       try {
         // Simulate upload progress
         const progressInterval = setInterval(() => {
           setFiles(currentFiles => {
             const updatedFiles = [...currentFiles];
-            if (updatedFiles[fileIndex]) {
+            const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
+            if (fileIndex !== -1) {
               updatedFiles[fileIndex].progress += Math.random() * 15;
               if (updatedFiles[fileIndex].progress >= 100) {
                 updatedFiles[fileIndex].progress = 100;
@@ -75,7 +75,8 @@ const Upload = () => {
         // Mark as completed
         setFiles(currentFiles => {
           const updatedFiles = [...currentFiles];
-          if (updatedFiles[fileIndex]) {
+          const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
+          if (fileIndex !== -1) {
             updatedFiles[fileIndex].status = 'completed';
             updatedFiles[fileIndex].progress = 100;
           }
@@ -90,7 +91,8 @@ const Upload = () => {
       } catch (error) {
         setFiles(currentFiles => {
           const updatedFiles = [...currentFiles];
-          if (updatedFiles[fileIndex]) {
+          const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
+          if (fileIndex !== -1) {
             updatedFiles[fileIndex].status = 'error';
           }
           return updatedFiles;
@@ -103,10 +105,6 @@ const Upload = () => {
         });
       }
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    return formatFileSize(bytes);
   };
 
   const removeFile = (index: number) => {
