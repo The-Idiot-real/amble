@@ -1,6 +1,13 @@
 import { Header } from "@/components/Header";
 import { Shield, Zap, Users, Heart } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getStats, AppStats } from "@/lib/fileStorage";
 const About = () => {
+  const [stats, setStats] = useState<AppStats>({ totalFiles: 0, totalUsers: 1, totalDownloads: 0, totalConverts: 0 });
+
+  useEffect(() => {
+    setStats(getStats());
+  }, []);
   const features = [{
     icon: Shield,
     title: "Secure & Private",
@@ -50,10 +57,24 @@ const About = () => {
           <div className="text-center">
             <div className="file-card max-w-3xl mx-auto">
               <h2 className="text-3xl font-bold mb-6">Our Members</h2>
-              <p className="leading-relaxed mb-6 font-medium text-gray-800 text-xl text-center">Jawad Bin Sarwar, (9EV-3, 12), ACPS 
-Araf Abdullah, (9EV-3, 14), ACPS 
-Rahian Zahid, (9EV-3, 16), ACPS ZoHait Abdullah</p>
-              <p className="text-muted-foreground leading-relaxed">
+              <div className="space-y-3 text-left">
+                <p className="leading-relaxed text-foreground text-lg">
+                  <strong>Jawad Bin Sarwar</strong>, (9EV-3, 12), ACPS
+                </p>
+                <p className="leading-relaxed text-foreground text-lg">
+                  <strong>Araf Abdullah</strong>, (9EV-3, 14), ACPS
+                </p>
+                <p className="leading-relaxed text-foreground text-lg">
+                  <strong>Raihan Zahid</strong>, (9EV-3, 16), ACPS
+                </p>
+                <p className="leading-relaxed text-foreground text-lg">
+                  <strong>Zohair Abdullah</strong>, (9EV-3, 18), ACPS
+                </p>
+                <p className="leading-relaxed text-foreground text-lg">
+                  <strong>Intesar Alam Arko</strong>, (9EV-3, 20), ACPS
+                </p>
+              </div>
+              <p className="text-muted-foreground leading-relaxed mt-6">
                 Built with modern web technologies and a focus on user experience, Amble 
                 represents the future of file sharing and conversion - simple, beautiful, and powerful.
               </p>
@@ -63,20 +84,20 @@ Rahian Zahid, (9EV-3, 16), ACPS ZoHait Abdullah</p>
           {/* Stats Section */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16">
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">10k+</div>
+              <div className="text-3xl font-bold text-primary mb-2">{stats.totalFiles}</div>
               <div className="text-sm text-muted-foreground">Files Shared</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">500+</div>
-              <div className="text-sm text-muted-foreground">Happy Users</div>
+              <div className="text-3xl font-bold text-primary mb-2">{stats.totalUsers}</div>
+              <div className="text-sm text-muted-foreground">Active Users</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">99.9%</div>
-              <div className="text-sm text-muted-foreground">Uptime</div>
+              <div className="text-3xl font-bold text-primary mb-2">{stats.totalDownloads}</div>
+              <div className="text-sm text-muted-foreground">Downloads</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <div className="text-sm text-muted-foreground">Support</div>
+              <div className="text-3xl font-bold text-primary mb-2">{stats.totalConverts}</div>
+              <div className="text-sm text-muted-foreground">Conversions</div>
             </div>
           </div>
         </div>

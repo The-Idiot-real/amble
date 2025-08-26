@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Badge } from "@/components/ui/badge";
+import { convertFile, downloadConvertedFile, formatFileSize } from "@/lib/fileStorage";
 
 interface ConversionJob {
   id: string;
@@ -15,7 +16,7 @@ interface ConversionJob {
   fileSize: string;
   progress: number;
   status: 'uploading' | 'converting' | 'completed' | 'error';
-  downloadUrl?: string;
+  convertedFileId?: string;
 }
 
 const Convert = () => {
@@ -70,19 +71,11 @@ const Convert = () => {
     }
   }, [selectedFormat, toast]);
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   const getFileExtension = (fileName: string) => {
     return fileName.split('.').pop()?.toLowerCase() || '';
   };
 
-  const handleFiles = (fileList: FileList) => {
+  const handleFiles = async (fileList: FileList) => {
     if (!selectedFormat) {
       toast({
         title: "Format Required",
@@ -104,47 +97,70 @@ const Convert = () => {
 
     setConversions(prev => [...prev, ...newConversions]);
 
-    // Simulate conversion process
-    newConversions.forEach((conversion, index) => {
-      const conversionIndex = conversions.length + index;
-      
-      // Upload phase
-      const uploadInterval = setInterval(() => {
+    // Process each file
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      const conversionIndex = conversions.length + i;
+
+      try {
+        // Simulate upload progress
+        const uploadInterval = setInterval(() => {
+          setConversions(current => {
+            const updated = [...current];
+            if (updated[conversionIndex] && updated[conversionIndex].status === 'uploading') {
+              updated[conversionIndex].progress += Math.random() * 20;
+              if (updated[conversionIndex].progress >= 50) {
+                updated[conversionIndex].status = 'converting';
+                updated[conversionIndex].progress = 50;
+                clearInterval(uploadInterval);
+              }
+            }
+            return updated;
+          });
+        }, 200);
+
+        // Perform actual conversion
+        const convertedFile = await convertFile(file, selectedFormat);
+
+        // Update conversion progress
+        const conversionInterval = setInterval(() => {
+          setConversions(current => {
+            const updated = [...current];
+            if (updated[conversionIndex] && updated[conversionIndex].status === 'converting') {
+              updated[conversionIndex].progress += Math.random() * 10;
+              if (updated[conversionIndex].progress >= 100) {
+                updated[conversionIndex].progress = 100;
+                updated[conversionIndex].status = 'completed';
+                updated[conversionIndex].convertedFileId = convertedFile.id;
+                clearInterval(conversionInterval);
+                
+                toast({
+                  title: "Conversion Complete",
+                  description: `${file.name} converted to ${selectedFormat.toUpperCase()}`,
+                });
+              }
+            }
+            return updated;
+          });
+        }, 300);
+
+      } catch (error) {
         setConversions(current => {
           const updated = [...current];
-          if (updated[conversionIndex] && updated[conversionIndex].status === 'uploading') {
-            updated[conversionIndex].progress += Math.random() * 30;
-            if (updated[conversionIndex].progress >= 100) {
-              updated[conversionIndex].progress = 0;
-              updated[conversionIndex].status = 'converting';
-              clearInterval(uploadInterval);
-              
-              // Conversion phase
-              const convertInterval = setInterval(() => {
-                setConversions(curr => {
-                  const upd = [...curr];
-                  if (upd[conversionIndex] && upd[conversionIndex].status === 'converting') {
-                    upd[conversionIndex].progress += Math.random() * 15;
-                    if (upd[conversionIndex].progress >= 100) {
-                      upd[conversionIndex].progress = 100;
-                      upd[conversionIndex].status = 'completed';
-                      upd[conversionIndex].downloadUrl = `#download-${upd[conversionIndex].id}`;
-                      clearInterval(convertInterval);
-                      toast({
-                        title: "Conversion Complete",
-                        description: `${upd[conversionIndex].fileName} converted to ${selectedFormat.toUpperCase()}`,
-                      });
-                    }
-                  }
-                  return upd;
-                });
-              }, 200);
-            }
+          if (updated[conversionIndex]) {
+            updated[conversionIndex].status = 'error';
+            updated[conversionIndex].progress = 0;
           }
           return updated;
         });
-      }, 150);
-    });
+
+        toast({
+          title: "Conversion Failed",
+          description: `Failed to convert ${file.name}. Please try again.`,
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const removeConversion = (id: string) => {
@@ -152,10 +168,13 @@ const Convert = () => {
   };
 
   const downloadFile = (conversion: ConversionJob) => {
-    toast({
-      title: "Download Started",
-      description: `Downloading converted ${conversion.fileName}`,
-    });
+    if (conversion.convertedFileId) {
+      downloadConvertedFile(conversion.convertedFileId);
+      toast({
+        title: "Download Started",
+        description: `Downloading converted ${conversion.fileName}`,
+      });
+    }
   };
 
   const getStatusColor = (status: ConversionJob['status']) => {

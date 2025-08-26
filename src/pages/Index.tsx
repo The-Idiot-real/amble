@@ -5,74 +5,46 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Upload, Sparkles, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock data for demonstration
-const mockFiles: FileData[] = [
-  {
-    id: "1",
-    name: "Project_Presentation.pdf",
-    size: "2.4 MB",
-    type: "application/pdf",
-    uploadDate: "2 hours ago",
-    downloadCount: 15,
-  },
-  {
-    id: "2", 
-    name: "Summer_Vacation_Photos.zip",
-    size: "45.8 MB",
-    type: "application/zip",
-    uploadDate: "1 day ago",
-    downloadCount: 8,
-  },
-  {
-    id: "3",
-    name: "Budget_Spreadsheet.xlsx",
-    size: "1.2 MB", 
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    uploadDate: "3 days ago",
-    downloadCount: 23,
-  },
-  {
-    id: "4",
-    name: "Design_Mockups.fig",
-    size: "12.6 MB",
-    type: "application/figma",
-    uploadDate: "1 week ago", 
-    downloadCount: 42,
-  },
-  {
-    id: "5",
-    name: "Meeting_Recording.mp4",
-    size: "156.3 MB",
-    type: "video/mp4",
-    uploadDate: "2 weeks ago",
-    downloadCount: 31,
-  },
-  {
-    id: "6",
-    name: "Research_Paper.docx", 
-    size: "890 KB",
-    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    uploadDate: "3 weeks ago",
-    downloadCount: 67,
-  },
-];
+import { getStoredFiles, searchFiles, downloadFile, formatFileSize } from "@/lib/fileStorage";
 
 const Index = () => {
-  const [files, setFiles] = useState<FileData[]>(mockFiles);
-  const [filteredFiles, setFilteredFiles] = useState<FileData[]>(mockFiles);
+  const [files, setFiles] = useState<FileData[]>([]);
+  const [filteredFiles, setFilteredFiles] = useState<FileData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
+  const loadFiles = () => {
+    const storedFiles = getStoredFiles();
+    const fileData: FileData[] = storedFiles.map(file => ({
+      id: file.id,
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: file.type,
+      uploadDate: new Date(file.uploadDate).toLocaleDateString(),
+      downloadCount: file.downloadCount
+    }));
+    setFiles(fileData);
+    setFilteredFiles(fileData);
+  };
 
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredFiles(files);
     } else {
-      const filtered = files.filter(file =>
-        file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        file.type.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredFiles(filtered);
+      const storedResults = searchFiles(searchQuery);
+      const searchResults: FileData[] = storedResults.map(file => ({
+        id: file.id,
+        name: file.name,
+        size: formatFileSize(file.size),
+        type: file.type,
+        uploadDate: new Date(file.uploadDate).toLocaleDateString(),
+        downloadCount: file.downloadCount
+      }));
+      setFilteredFiles(searchResults);
     }
   }, [searchQuery, files]);
 
@@ -87,12 +59,11 @@ const Index = () => {
         title: "Download Started",
         description: `Downloading ${file.name}...`,
       });
-      // Simulate download
+      downloadFile(fileId);
+      // Refresh files to update download count
       setTimeout(() => {
-        setFiles(prev => prev.map(f => 
-          f.id === fileId ? { ...f, downloadCount: f.downloadCount + 1 } : f
-        ));
-      }, 1000);
+        loadFiles();
+      }, 500);
     }
   };
 
@@ -173,9 +144,9 @@ const Index = () => {
               </div>
             </div>
 
-            {filteredFiles.length > 0 ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredFiles.map((file) => (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredFiles.length > 0 ? (
+                filteredFiles.map((file) => (
                   <FileCard
                     key={file.id}
                     file={file}
@@ -183,17 +154,31 @@ const Index = () => {
                     onPreview={handlePreview}
                     onShare={handleShare}
                   />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <div className="text-muted-foreground">
-                  <Sparkles className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-xl font-semibold mb-2">No files found</h3>
-                  <p>Try adjusting your search query or upload some files.</p>
+                ))
+              ) : files.length === 0 ? (
+                <div className="col-span-full text-center py-16">
+                  <div className="text-muted-foreground">
+                    <Sparkles className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-xl font-semibold mb-2">No files uploaded yet</h3>
+                    <p className="mb-4">Be the first to share something amazing!</p>
+                    <Button asChild className="bg-gradient-to-r from-primary to-accent">
+                      <Link to="/upload">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Files
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="col-span-full text-center py-16">
+                  <div className="text-muted-foreground">
+                    <Sparkles className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-xl font-semibold mb-2">No files found</h3>
+                    <p>Try adjusting your search query.</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 

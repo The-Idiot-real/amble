@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
+import { saveFile, formatFileSize } from "@/lib/fileStorage";
 
 interface UploadedFile {
   name: string;
@@ -37,7 +38,7 @@ const Upload = () => {
     }
   }, []);
 
-  const handleFiles = (fileList: FileList) => {
+  const handleFiles = async (fileList: FileList) => {
     const newFiles = Array.from(fileList).map(file => ({
       name: file.name,
       size: formatFileSize(file.size),
@@ -47,36 +48,65 @@ const Upload = () => {
 
     setFiles(prev => [...prev, ...newFiles]);
 
-    // Simulate upload progress
-    newFiles.forEach((_, index) => {
-      const fileIndex = files.length + index;
-      const interval = setInterval(() => {
+    // Process each file
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      const fileIndex = files.length + i;
+
+      try {
+        // Simulate upload progress
+        const progressInterval = setInterval(() => {
+          setFiles(currentFiles => {
+            const updatedFiles = [...currentFiles];
+            if (updatedFiles[fileIndex]) {
+              updatedFiles[fileIndex].progress += Math.random() * 15;
+              if (updatedFiles[fileIndex].progress >= 100) {
+                updatedFiles[fileIndex].progress = 100;
+                clearInterval(progressInterval);
+              }
+            }
+            return updatedFiles;
+          });
+        }, 200);
+
+        // Actually save the file
+        await saveFile(file);
+
+        // Mark as completed
         setFiles(currentFiles => {
           const updatedFiles = [...currentFiles];
           if (updatedFiles[fileIndex]) {
-            updatedFiles[fileIndex].progress += Math.random() * 20;
-            if (updatedFiles[fileIndex].progress >= 100) {
-              updatedFiles[fileIndex].progress = 100;
-              updatedFiles[fileIndex].status = 'completed';
-              clearInterval(interval);
-              toast({
-                title: "Upload Complete",
-                description: `${updatedFiles[fileIndex].name} has been uploaded successfully.`,
-              });
-            }
+            updatedFiles[fileIndex].status = 'completed';
+            updatedFiles[fileIndex].progress = 100;
           }
           return updatedFiles;
         });
-      }, 300);
-    });
+
+        toast({
+          title: "Upload Complete",
+          description: `${file.name} has been uploaded successfully.`,
+        });
+
+      } catch (error) {
+        setFiles(currentFiles => {
+          const updatedFiles = [...currentFiles];
+          if (updatedFiles[fileIndex]) {
+            updatedFiles[fileIndex].status = 'error';
+          }
+          return updatedFiles;
+        });
+
+        toast({
+          title: "Upload Failed",
+          description: `Failed to upload ${file.name}. Please try again.`,
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return formatFileSize(bytes);
   };
 
   const removeFile = (index: number) => {
