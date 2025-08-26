@@ -50,12 +50,9 @@ const About = () => {
           <div className="text-center">
             <div className="file-card max-w-3xl mx-auto">
               <h2 className="text-3xl font-bold mb-6">Our Members</h2>
-              <p className="leading-relaxed mb-6 font-medium text-gray-800 text-xl text-center">Jawad Bin Sarwar, (9EV-3, 12), ACPS
-Araf Abdullah, (9EV-3, 14), ACPS
-Rahian Zahid, (9EV-3, 16), ACPS
-ZoHait Abdullah
-
-            </p>
+              <p className="leading-relaxed mb-6 font-medium text-gray-800 text-xl text-center">Jawad Bin Sarwar, (9EV-3, 12), ACPS 
+Araf Abdullah, (9EV-3, 14), ACPS 
+Rahian Zahid, (9EV-3, 16), ACPS ZoHait Abdullah</p>
               <p className="text-muted-foreground leading-relaxed">
                 Built with modern web technologies and a focus on user experience, Amble 
                 represents the future of file sharing and conversion - simple, beautiful, and powerful.
