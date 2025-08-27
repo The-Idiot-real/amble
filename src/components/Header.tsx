@@ -4,37 +4,58 @@ import { Search, Upload, Menu, X, RefreshCw, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/ThemeProvider";
+import { SearchResults } from "./SearchResults";
+import { FileData } from "./FileCard";
 import ambleLogoDark from "@/assets/amble-logo-dark.png";
 import ambleLogoLight from "@/assets/amble-logo-light.png";
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
+  searchResults?: FileData[];
+  onDownload?: (fileId: string) => void;
+  onPreview?: (fileId: string) => void;
+  onShare?: (fileId: string) => void;
 }
 
-export const Header = ({ onSearch }: HeaderProps) => {
+export const Header = ({ 
+  onSearch, 
+  searchResults = [], 
+  onDownload, 
+  onPreview, 
+  onShare 
+}: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const location = useLocation();
   const { theme, setTheme } = useTheme();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch?.(searchQuery);
+    if (searchQuery.trim()) {
+      onSearch?.(searchQuery);
+      setShowSearchResults(true);
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
+    <>
     <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <img 
-              src={theme === "dark" ? ambleLogoDark : ambleLogoLight} 
-              alt="Amble Logo" 
-              className="w-8 h-8"
-            />
-            <span className="text-xl font-bold gradient-text">Amble</span>
+          <Link to="/" className="flex items-center relative">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-accent to-primary-glow p-2 shadow-lg">
+              <img 
+                src={theme === "dark" ? ambleLogoDark : ambleLogoLight} 
+                alt="Amble Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="absolute -top-1 -right-2 w-6 h-6 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg">
+              A
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -176,5 +197,16 @@ export const Header = ({ onSearch }: HeaderProps) => {
         )}
       </div>
     </header>
+    
+    <SearchResults
+      isVisible={showSearchResults && searchResults.length > 0}
+      results={searchResults}
+      searchQuery={searchQuery}
+      onClose={() => setShowSearchResults(false)}
+      onDownload={onDownload || (() => {})}
+      onPreview={onPreview || (() => {})}
+      onShare={onShare || (() => {})}
+    />
+    </>
   );
 };

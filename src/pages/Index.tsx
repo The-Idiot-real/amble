@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { FileCard, FileData } from "@/components/FileCard";
+import { FilePreview } from "@/components/FilePreview";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Upload, Sparkles, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { getStoredFiles, searchFiles, downloadFile, formatFileSize } from "@/lib/fileStorage";
+import { getStoredFiles, searchFiles, downloadFile, formatFileSize, StoredFile } from "@/lib/fileStorage";
 
 const Index = () => {
   const [files, setFiles] = useState<FileData[]>([]);
   const [filteredFiles, setFilteredFiles] = useState<FileData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<FileData[]>([]);
+  const [previewFile, setPreviewFile] = useState<StoredFile | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,6 +54,20 @@ const Index = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    if (query.trim()) {
+      const storedResults = searchFiles(query);
+      const searchData: FileData[] = storedResults.map(file => ({
+        id: file.id,
+        name: file.name,
+        size: formatFileSize(file.size),
+        type: file.type,
+        uploadDate: new Date(file.uploadDate).toLocaleDateString(),
+        downloadCount: file.downloadCount
+      }));
+      setSearchResults(searchData);
+    } else {
+      setSearchResults([]);
+    }
   };
 
   const handleDownload = (fileId: string) => {
@@ -68,12 +86,11 @@ const Index = () => {
   };
 
   const handlePreview = (fileId: string) => {
-    const file = files.find(f => f.id === fileId);
+    const storedFiles = getStoredFiles();
+    const file = storedFiles.find(f => f.id === fileId);
     if (file) {
-      toast({
-        title: "Preview",
-        description: `Opening preview for ${file.name}...`,
-      });
+      setPreviewFile(file);
+      setIsPreviewOpen(true);
     }
   };
 
@@ -90,7 +107,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <Header onSearch={handleSearch} />
+      <Header 
+        onSearch={handleSearch}
+        searchResults={searchResults}
+        onDownload={handleDownload}
+        onPreview={handlePreview}
+        onShare={handleShare}
+      />
       
       <main>
         {/* Hero Section */}
@@ -200,6 +223,17 @@ const Index = () => {
           </div>
         </section>
       </main>
+      
+      <FilePreview
+        file={previewFile}
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        onDownload={() => {
+          if (previewFile) {
+            handleDownload(previewFile.id);
+          }
+        }}
+      />
     </div>
   );
 };
