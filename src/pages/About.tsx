@@ -3,8 +3,12 @@ import { Shield, Zap, Users, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getStats, AppStats } from "@/lib/fileStorage";
 const About = () => {
-  const [stats, setStats] = useState<AppStats>({ totalFiles: 0, totalUsers: 1, totalDownloads: 0, totalConverts: 0 });
-
+  const [stats, setStats] = useState<AppStats>({
+    totalFiles: 0,
+    totalUsers: 1,
+    totalDownloads: 0,
+    totalConverts: 0
+  });
   useEffect(() => {
     setStats(getStats());
   }, []);
@@ -65,10 +69,10 @@ const About = () => {
                   <strong>Araf Abdullah</strong>, (9EV-3, 14), ACPS
                 </p>
                 <p className="leading-relaxed text-foreground text-lg">
-                  <strong>Raihan Zahid</strong>, (9EV-3, 16), ACPS
+                  <strong>Rahian Zahid</strong>, (9EV-3, 16), ACPS
                 </p>
                 <p className="leading-relaxed text-foreground text-lg">
-                  <strong>Zohair Abdullah</strong>, (9EV-3, 18), ACPS
+                  <strong>Zuhair Abdullah</strong>, (9EV-3, 18), ACPS
                 </p>
                 <p className="leading-relaxed text-foreground text-lg">
                   <strong>Intesar Alam Arko</strong>, (9EV-3, 20), ACPS
