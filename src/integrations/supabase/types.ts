@@ -14,7 +14,167 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          file_attachments: Json | null
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          file_attachments?: Json | null
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          file_attachments?: Json | null
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversions: {
+        Row: {
+          completed_at: string | null
+          converted_file_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          original_file_id: string | null
+          original_format: string
+          status: string
+          target_format: string
+        }
+        Insert: {
+          completed_at?: string | null
+          converted_file_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          original_file_id?: string | null
+          original_format: string
+          status?: string
+          target_format: string
+        }
+        Update: {
+          completed_at?: string | null
+          converted_file_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          original_file_id?: string | null
+          original_format?: string
+          status?: string
+          target_format?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversions_converted_file_id_fkey"
+            columns: ["converted_file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversions_original_file_id_fkey"
+            columns: ["original_file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      files: {
+        Row: {
+          created_at: string
+          description: string | null
+          download_count: number
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          is_public: boolean
+          name: string
+          original_name: string
+          storage_path: string
+          tags: string[] | null
+          topic: string | null
+          updated_at: string
+          upload_date: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          is_public?: boolean
+          name: string
+          original_name: string
+          storage_path: string
+          tags?: string[] | null
+          topic?: string | null
+          updated_at?: string
+          upload_date?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          original_name?: string
+          storage_path?: string
+          tags?: string[] | null
+          topic?: string | null
+          updated_at?: string
+          upload_date?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
