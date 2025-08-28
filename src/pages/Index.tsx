@@ -1,95 +1,109 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/Header";
-import { FileCard, FileData } from "@/components/FileCard";
+import { FileGrid } from "@/components/FileGrid";
 import { FilePreview } from "@/components/FilePreview";
+import { AiChat } from "@/components/AiChat";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Upload, Sparkles, RefreshCw } from "lucide-react";
+import { ArrowRight, Upload, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { getStoredFiles, searchFiles, downloadFile, formatFileSize, StoredFile } from "@/lib/fileStorage";
+import { getFiles, downloadFile as downloadFileService, FileData } from "@/lib/fileService";
 
 const Index = () => {
   const [files, setFiles] = useState<FileData[]>([]);
-  const [filteredFiles, setFilteredFiles] = useState<FileData[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<FileData[]>([]);
-  const [previewFile, setPreviewFile] = useState<StoredFile | null>(null);
+  const [previewFile, setPreviewFile] = useState<any>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const searchResultsRef = useRef<HTMLDivElement>(null);
+
+  const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
     loadFiles();
-  }, []);
+  }, [currentPage, searchQuery]);
 
-  const loadFiles = () => {
-    const storedFiles = getStoredFiles();
-    const fileData: FileData[] = storedFiles.map(file => ({
-      id: file.id,
-      name: file.name,
-      size: formatFileSize(file.size),
-      type: file.type,
-      uploadDate: new Date(file.uploadDate).toLocaleDateString(),
-      downloadCount: file.downloadCount
-    }));
-    setFiles(fileData);
-    setFilteredFiles(fileData);
-  };
-
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredFiles(files);
-    } else {
-      const storedResults = searchFiles(searchQuery);
-      const searchResults: FileData[] = storedResults.map(file => ({
-        id: file.id,
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: file.type,
-        uploadDate: new Date(file.uploadDate).toLocaleDateString(),
-        downloadCount: file.downloadCount
-      }));
-      setFilteredFiles(searchResults);
+  const loadFiles = async () => {
+    setIsLoading(true);
+    try {
+      const { files: fetchedFiles, totalCount: count } = await getFiles(currentPage, ITEMS_PER_PAGE, searchQuery);
+      setFiles(fetchedFiles);
+      setTotalCount(count);
+    } catch (error) {
+      console.error('Error loading files:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load files. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [searchQuery, files]);
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim()) {
-      const storedResults = searchFiles(query);
-      const searchData: FileData[] = storedResults.map(file => ({
-        id: file.id,
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: file.type,
-        uploadDate: new Date(file.uploadDate).toLocaleDateString(),
-        downloadCount: file.downloadCount
-      }));
-      setSearchResults(searchData);
-    } else {
-      setSearchResults([]);
+    setCurrentPage(1);
+    
+    // Scroll to results section if there's a search query
+    if (query.trim() && searchResultsRef.current) {
+      setTimeout(() => {
+        searchResultsRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
     }
   };
 
-  const handleDownload = (fileId: string) => {
+  const handleDownload = async (fileId: string) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
-      toast({
-        title: "Download Started",
-        description: `Downloading ${file.name}...`,
-      });
-      downloadFile(fileId);
-      // Refresh files to update download count
-      setTimeout(() => {
-        loadFiles();
-      }, 500);
+      try {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = file.file_path;
+        link.download = file.original_name;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Update download count
+        await downloadFileService(fileId);
+        
+        toast({
+          title: "Download Started",
+          description: `Downloading ${file.name}...`,
+        });
+
+        // Refresh files to update download count
+        setTimeout(() => {
+          loadFiles();
+        }, 1000);
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: "Download Failed",
+          description: "Failed to download file. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
   const handlePreview = (fileId: string) => {
-    const storedFiles = getStoredFiles();
-    const file = storedFiles.find(f => f.id === fileId);
+    const file = files.find(f => f.id === fileId);
     if (file) {
-      setPreviewFile(file);
+      setPreviewFile({
+        id: file.id,
+        name: file.name,
+        type: file.file_type,
+        data: file.file_path // For preview, we'll use the public URL
+      });
       setIsPreviewOpen(true);
     }
   };
@@ -97,7 +111,8 @@ const Index = () => {
   const handleShare = (fileId: string) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
-      navigator.clipboard.writeText(`https://amble.app/file/${fileId}`);
+      const shareUrl = `${window.location.origin}/file/${fileId}`;
+      navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Link Copied",
         description: `Share link for ${file.name} copied to clipboard!`,
@@ -105,15 +120,11 @@ const Index = () => {
     }
   };
 
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
   return (
     <div className="min-h-screen">
-      <Header 
-        onSearch={handleSearch}
-        searchResults={searchResults}
-        onDownload={handleDownload}
-        onPreview={handlePreview}
-        onShare={handleShare}
-      />
+      <Header onSearch={handleSearch} />
       
       <main>
         {/* Hero Section */}
@@ -152,76 +163,42 @@ const Index = () => {
         </section>
 
         {/* Files Section */}
-        <section className="py-16 px-6">
+        <section ref={searchResultsRef} className="py-16 px-6">
           <div className="container mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">
-                  Recent Files
-                  <Sparkles className="inline w-6 h-6 ml-2 text-primary" />
-                </h2>
-                <p className="text-muted-foreground">
-                  {searchQuery ? `Found ${filteredFiles.length} files matching "${searchQuery}"` : 
-                   `${files.length} files available for download`}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredFiles.length > 0 ? (
-                filteredFiles.map((file) => (
-                  <FileCard
-                    key={file.id}
-                    file={file}
-                    onDownload={handleDownload}
-                    onPreview={handlePreview}
-                    onShare={handleShare}
-                  />
-                ))
-              ) : files.length === 0 ? (
-                <div className="col-span-full text-center py-16">
-                  <div className="text-muted-foreground">
-                    <Sparkles className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-xl font-semibold mb-2">No files uploaded yet</h3>
-                    <p className="mb-4">Be the first to share something amazing!</p>
-                    <Button asChild className="bg-gradient-to-r from-primary to-accent">
-                      <Link to="/upload">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Files
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="col-span-full text-center py-16">
-                  <div className="text-muted-foreground">
-                    <Sparkles className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-xl font-semibold mb-2">No files found</h3>
-                    <p>Try adjusting your search query.</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <FileGrid
+              files={files}
+              totalCount={totalCount}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              searchQuery={searchQuery}
+              isLoading={isLoading}
+              onPageChange={setCurrentPage}
+              onDownload={handleDownload}
+              onPreview={handlePreview}
+              onShare={handleShare}
+            />
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 px-6">
-          <div className="container mx-auto text-center">
-            <div className="file-card max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-              <p className="text-muted-foreground mb-6">
-                Join thousands of users who trust Amble for their file sharing and conversion needs.
-              </p>
-              <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent">
-                <Link to="/upload">
-                  <Upload className="w-5 h-5 mr-2" />
-                  Upload Your First File
-                </Link>
-              </Button>
+        {!searchQuery && (
+          <section className="py-20 px-6">
+            <div className="container mx-auto text-center">
+              <div className="file-card max-w-2xl mx-auto">
+                <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+                <p className="text-muted-foreground mb-6">
+                  Join thousands of users who trust Amble for their file sharing and conversion needs.
+                </p>
+                <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent">
+                  <Link to="/upload">
+                    <Upload className="w-5 h-5 mr-2" />
+                    Upload Your First File
+                  </Link>
+                </Button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
       
       <FilePreview
@@ -234,6 +211,8 @@ const Index = () => {
           }
         }}
       />
+
+      <AiChat />
     </div>
   );
 };

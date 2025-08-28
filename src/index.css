@@ -69,8 +69,8 @@
   }
 
   .dark {
-    --background: 229 84% 8%;
-    --background-secondary: 220 15% 10%;
+    --background: 229 84% 5%;
+    --background-secondary: 220 15% 8%;
     --foreground: 210 40% 98%;
 
     --card: 220 15% 8%;
@@ -146,5 +146,33 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .header-notch {
+    position: relative;
+  }
+
+  .header-notch::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -30px;
+    width: 0;
+    height: 0;
+    border-left: 30px solid transparent;
+    border-top: 70px solid hsl(var(--primary));
+    z-index: 1;
+  }
+
+  .header-notch::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -30px;
+    width: 0;
+    height: 0;
+    border-right: 30px solid transparent;
+    border-top: 70px solid hsl(var(--primary));
+    z-index: 1;
   }
 }

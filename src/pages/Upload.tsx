@@ -1,52 +1,103 @@
 import { useState, useCallback } from "react";
 import { Upload as UploadIcon, File, X, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
-import { saveFile, formatFileSize } from "@/lib/fileStorage";
+import { AiChat } from "@/components/AiChat";
+import { uploadFile, formatFileSize } from "@/lib/fileService";
 
 interface UploadedFile {
   name: string;
   size: string;
   progress: number;
   status: 'uploading' | 'completed' | 'error';
+  file: File;
+}
+
+interface FileFormData {
+  name: string;
+  topic: string;
+  description: string;
+  tags: string;
 }
 
 const Upload = () => {
   const [dragActive, setDragActive] = useState(false);
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [formData, setFormData] = useState<FileFormData>({
+    name: '',
+    topic: '',
+    description: '',
+    tags: ''
+  });
   const { toast } = useToast();
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFiles(e.dataTransfer.files);
-    }
-  }, []);
+  // ... keep existing code for drag handlers and file handling
 
   const handleFiles = async (fileList: FileList) => {
     const newFiles = Array.from(fileList).map(file => ({
       name: file.name,
       size: formatFileSize(file.size),
       progress: 0,
-      status: 'uploading' as const
+      status: 'uploading' as const,
+      file: file
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
+
+    // Process each file with form data
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      
+      try {
+        await uploadFile({
+          file: file,
+          name: formData.name || file.name,
+          topic: formData.topic || undefined,
+          description: formData.description || undefined,
+          tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined
+        });
+
+        // Update status to completed
+        setFiles(currentFiles => {
+          const updatedFiles = [...currentFiles];
+          const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
+          if (fileIndex !== -1) {
+            updatedFiles[fileIndex].status = 'completed';
+            updatedFiles[fileIndex].progress = 100;
+          }
+          return updatedFiles;
+        });
+
+        toast({
+          title: "Upload Complete",
+          description: `${file.name} has been uploaded successfully.`,
+        });
+
+      } catch (error) {
+        console.error('Upload error:', error);
+        // Handle error
+        setFiles(currentFiles => {
+          const updatedFiles = [...currentFiles];
+          const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
+          if (fileIndex !== -1) {
+            updatedFiles[fileIndex].status = 'error';
+          }
+          return updatedFiles;
+        });
+
+        toast({
+          title: "Upload Failed",
+          description: `Failed to upload ${file.name}. Please try again.`,
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
     // Process each file
     for (let i = 0; i < fileList.length; i++) {

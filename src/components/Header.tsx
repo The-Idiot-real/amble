@@ -46,15 +46,14 @@ export const Header = ({
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center relative">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-accent to-primary-glow p-2 shadow-lg">
-              <img 
-                src={theme === "dark" ? ambleLogoDark : ambleLogoLight} 
-                alt="Amble Logo" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div className="absolute -top-1 -right-2 w-6 h-6 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg">
-              A
+            <div className="header-notch bg-gradient-to-r from-primary to-accent px-8 py-3 flex items-center justify-center relative z-10">
+              <div className="w-12 h-12 rounded-xl p-1">
+                <img 
+                  src={theme === "dark" ? ambleLogoDark : ambleLogoLight} 
+                  alt="Amble Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
           </Link>
 
@@ -198,15 +197,7 @@ export const Header = ({
       </div>
     </header>
     
-    <SearchResults
-      isVisible={showSearchResults && searchResults.length > 0}
-      results={searchResults}
-      searchQuery={searchQuery}
-      onClose={() => setShowSearchResults(false)}
-      onDownload={onDownload || (() => {})}
-      onPreview={onPreview || (() => {})}
-      onShare={onShare || (() => {})}
-    />
+    {/* Search results will be handled by parent component */}
     </>
   );
 };
