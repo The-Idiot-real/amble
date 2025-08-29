@@ -36,7 +36,25 @@ const Upload = () => {
   });
   const { toast } = useToast();
 
-  // ... keep existing code for drag handlers and file handling
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFiles(e.dataTransfer.files);
+    }
+  }, []);
 
   const handleFiles = async (fileList: FileList) => {
     const newFiles = Array.from(fileList).map(file => ({
@@ -80,66 +98,6 @@ const Upload = () => {
 
       } catch (error) {
         console.error('Upload error:', error);
-        // Handle error
-        setFiles(currentFiles => {
-          const updatedFiles = [...currentFiles];
-          const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
-          if (fileIndex !== -1) {
-            updatedFiles[fileIndex].status = 'error';
-          }
-          return updatedFiles;
-        });
-
-        toast({
-          title: "Upload Failed",
-          description: `Failed to upload ${file.name}. Please try again.`,
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-    // Process each file
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i];
-      
-      try {
-        // Simulate upload progress
-        const progressInterval = setInterval(() => {
-          setFiles(currentFiles => {
-            const updatedFiles = [...currentFiles];
-            const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
-            if (fileIndex !== -1) {
-              updatedFiles[fileIndex].progress += Math.random() * 15;
-              if (updatedFiles[fileIndex].progress >= 100) {
-                updatedFiles[fileIndex].progress = 100;
-                clearInterval(progressInterval);
-              }
-            }
-            return updatedFiles;
-          });
-        }, 200);
-
-        // Actually save the file
-        await saveFile(file);
-
-        // Mark as completed
-        setFiles(currentFiles => {
-          const updatedFiles = [...currentFiles];
-          const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
-          if (fileIndex !== -1) {
-            updatedFiles[fileIndex].status = 'completed';
-            updatedFiles[fileIndex].progress = 100;
-          }
-          return updatedFiles;
-        });
-
-        toast({
-          title: "Upload Complete",
-          description: `${file.name} has been uploaded successfully.`,
-        });
-
-      } catch (error) {
         setFiles(currentFiles => {
           const updatedFiles = [...currentFiles];
           const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
