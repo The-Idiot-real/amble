@@ -49,9 +49,32 @@ export const AiChat = () => {
     }
   }, [isOpen]);
 
+  const getOrCreateSessionId = () => {
+    let sessionId = localStorage.getItem('amble_session_id');
+    if (!sessionId) {
+      sessionId = Math.random().toString(36).substring(7) + Date.now().toString(36);
+      localStorage.setItem('amble_session_id', sessionId);
+    }
+    return sessionId;
+  };
+
   const createConversation = async () => {
     try {
-      const sessionId = Math.random().toString(36).substring(7);
+      const sessionId = getOrCreateSessionId();
+      
+      // First check if there's already a conversation for this session
+      const { data: existing } = await supabase
+        .from('chat_conversations')
+        .select('id')
+        .eq('session_id', sessionId)
+        .maybeSingle();
+        
+      if (existing) {
+        setConversationId(existing.id);
+        await loadExistingMessages(existing.id);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('chat_conversations')
         .insert({ session_id: sessionId })
@@ -62,6 +85,35 @@ export const AiChat = () => {
       setConversationId(data.id);
     } catch (error) {
       console.error('Error creating conversation:', error);
+    }
+  };
+
+  const loadExistingMessages = async (conversationId: string) => {
+    try {
+      const { data: messages, error } = await supabase
+        .from('chat_messages')
+        .select('role, content, created_at, file_attachments')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      
+      if (messages && messages.length > 0) {
+        const loadedMessages = messages.map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+          files: msg.file_attachments ? JSON.parse(JSON.stringify(msg.file_attachments)) : undefined
+        }));
+        
+        // Keep the initial greeting and add loaded messages
+        setMessages(prev => [
+          prev[0], // Keep the initial greeting
+          ...loadedMessages
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
     }
   };
 
