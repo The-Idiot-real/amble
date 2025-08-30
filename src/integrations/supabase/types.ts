@@ -180,9 +180,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_conversation_by_session: {
+        Args: { session_id_param: string }
+        Returns: {
+          created_at: string
+          id: string
+          session_id: string
+          updated_at: string
+        }[]
+      }
       get_current_session_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_messages_by_conversation_and_session: {
+        Args: { conversation_id_param: string; session_id_param: string }
+        Returns: {
+          content: string
+          conversation_id: string
+          created_at: string
+          file_attachments: Json
+          id: string
+          role: string
+        }[]
       }
     }
     Enums: {

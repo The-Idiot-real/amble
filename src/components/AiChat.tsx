@@ -62,19 +62,20 @@ export const AiChat = () => {
     try {
       const sessionId = getOrCreateSessionId();
       
-      // First check if there's already a conversation for this session
-      const { data: existing } = await supabase
-        .from('chat_conversations')
-        .select('id')
-        .eq('session_id', sessionId)
-        .maybeSingle();
+      // First check if there's already a conversation for this session using secure function
+      const { data: existing, error: existingError } = await supabase
+        .rpc('get_conversation_by_session', { session_id_param: sessionId });
         
-      if (existing) {
-        setConversationId(existing.id);
-        await loadExistingMessages(existing.id);
+      if (existingError) throw existingError;
+      
+      if (existing && existing.length > 0) {
+        const conversation = existing[0];
+        setConversationId(conversation.id);
+        await loadExistingMessages(conversation.id, sessionId);
         return;
       }
       
+      // Create new conversation if none exists
       const { data, error } = await supabase
         .from('chat_conversations')
         .insert({ session_id: sessionId })
@@ -88,13 +89,14 @@ export const AiChat = () => {
     }
   };
 
-  const loadExistingMessages = async (conversationId: string) => {
+  const loadExistingMessages = async (conversationId: string, sessionId: string) => {
     try {
+      // Use secure function to get messages
       const { data: messages, error } = await supabase
-        .from('chat_messages')
-        .select('role, content, created_at, file_attachments')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .rpc('get_messages_by_conversation_and_session', { 
+          conversation_id_param: conversationId,
+          session_id_param: sessionId 
+        });
 
       if (error) throw error;
       
