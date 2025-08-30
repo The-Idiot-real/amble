@@ -1,11 +1,15 @@
 import { serve } from "https://deno.land/x/sift@0.6.0/mod.ts";
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = Deno.env.get("SUPABASE_URL");
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const openaiKey = Deno.env.get("OPENAI_API_KEY");
 
-const openaiKey = Deno.env.get("OPENAI_API_KEY")!;
+if (!supabaseUrl || !supabaseKey || !openaiKey) {
+  throw new Error("Missing required environment variables");
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 serve(async (req) => {
   try {
@@ -19,7 +23,7 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${openaiKey}`,
+        Authorization: Bearer ${openaiKey},
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
@@ -31,6 +35,11 @@ serve(async (req) => {
       }),
     });
 
+    if (!openAIResponse.ok) {
+      const errBody = await openAIResponse.text();
+      throw new Error(OpenAI API error: ${openAIResponse.status} - ${errBody});
+    }
+
     const result = await openAIResponse.json();
     const reply = result.choices?.[0]?.message?.content || "No reply from AI.";
 
@@ -38,6 +47,7 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err: any) {
+    console.error("Function error:", err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 });
