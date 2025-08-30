@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const OPENAI_API_KEY = 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;
 
 serve(async (req) => {
   try {
