@@ -8,7 +8,6 @@ import { ArrowRight, Upload, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { getFiles, downloadFile as downloadFileService, FileData } from "@/lib/fileService";
-
 const Index = () => {
   const [files, setFiles] = useState<FileData[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -17,19 +16,21 @@ const Index = () => {
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const searchResultsRef = useRef<HTMLDivElement>(null);
-
   const ITEMS_PER_PAGE = 9;
-
   useEffect(() => {
     loadFiles();
   }, [currentPage, searchQuery]);
-
   const loadFiles = async () => {
     setIsLoading(true);
     try {
-      const { files: fetchedFiles, totalCount: count } = await getFiles(currentPage, ITEMS_PER_PAGE, searchQuery);
+      const {
+        files: fetchedFiles,
+        totalCount: count
+      } = await getFiles(currentPage, ITEMS_PER_PAGE, searchQuery);
       setFiles(fetchedFiles);
       setTotalCount(count);
     } catch (error) {
@@ -43,22 +44,20 @@ const Index = () => {
       setIsLoading(false);
     }
   };
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
-    
+
     // Scroll to results section if there's a search query
     if (query.trim() && searchResultsRef.current) {
       setTimeout(() => {
-        searchResultsRef.current?.scrollIntoView({ 
+        searchResultsRef.current?.scrollIntoView({
           behavior: 'smooth',
           block: 'start'
         });
       }, 100);
     }
   };
-
   const handleDownload = async (fileId: string) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
@@ -74,10 +73,9 @@ const Index = () => {
 
         // Update download count
         await downloadFileService(fileId);
-        
         toast({
           title: "Download Started",
-          description: `Downloading ${file.name}...`,
+          description: `Downloading ${file.name}...`
         });
 
         // Refresh files to update download count
@@ -94,7 +92,6 @@ const Index = () => {
       }
     }
   };
-
   const handlePreview = (fileId: string) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
@@ -107,7 +104,6 @@ const Index = () => {
       setIsPreviewOpen(true);
     }
   };
-
   const handleShare = (fileId: string) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
@@ -115,15 +111,12 @@ const Index = () => {
       navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Link Copied",
-        description: `Share link for ${file.name} copied to clipboard!`,
+        description: `Share link for ${file.name} copied to clipboard!`
       });
     }
   };
-
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-
-  return (
-    <div className="min-h-screen">
+  return <div className="min-h-screen">
       <Header onSearch={handleSearch} />
       
       <main>
@@ -132,12 +125,9 @@ const Index = () => {
           <div className="container mx-auto max-w-4xl">
             <div className="mb-8">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Share Files <span className="gradient-text">Beautifully</span>
+              Share Files <span className="gradient-text">Efficiently</span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Upload, share, convert, and manage your files with our modern, secure platform. 
-              Beautiful design meets powerful functionality.
-            </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">Upload, share, convert, and manage your files with our modern, secure platform. Aesthetic design meets powerful functionality.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent">
                   <Link to="/upload">
@@ -165,24 +155,12 @@ const Index = () => {
         {/* Files Section */}
         <section ref={searchResultsRef} className="py-16 px-6">
           <div className="container mx-auto">
-            <FileGrid
-              files={files}
-              totalCount={totalCount}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              searchQuery={searchQuery}
-              isLoading={isLoading}
-              onPageChange={setCurrentPage}
-              onDownload={handleDownload}
-              onPreview={handlePreview}
-              onShare={handleShare}
-            />
+            <FileGrid files={files} totalCount={totalCount} currentPage={currentPage} totalPages={totalPages} searchQuery={searchQuery} isLoading={isLoading} onPageChange={setCurrentPage} onDownload={handleDownload} onPreview={handlePreview} onShare={handleShare} />
           </div>
         </section>
 
         {/* CTA Section */}
-        {!searchQuery && (
-          <section className="py-20 px-6">
+        {!searchQuery && <section className="py-20 px-6">
             <div className="container mx-auto text-center">
               <div className="file-card max-w-2xl mx-auto">
                 <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
@@ -197,24 +175,16 @@ const Index = () => {
                 </Button>
               </div>
             </div>
-          </section>
-        )}
+          </section>}
       </main>
       
-      <FilePreview
-        file={previewFile}
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        onDownload={() => {
-          if (previewFile) {
-            handleDownload(previewFile.id);
-          }
-        }}
-      />
+      <FilePreview file={previewFile} isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} onDownload={() => {
+      if (previewFile) {
+        handleDownload(previewFile.id);
+      }
+    }} />
 
       <AiChat />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
