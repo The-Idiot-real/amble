@@ -82,3 +82,54 @@ serve(async (req) => {
     });
   }
 });
+
+// supabase/functions/ai-chat/index.ts
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+// IMPORTANT: set this in your Supabase project environment
+// e.g. in dashboard > Edge Functions > ai-chat > Environment Variables
+// key: OPENAI_API_KEY, value: your actual key
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+
+serve(async (req) => {
+  try {
+    const { message } = await req.json();
+
+    if (!message) {
+      return new Response(
+        JSON.stringify({ error: "No message provided" }),
+        { status: 400 }
+      );
+    }
+
+    // Call OpenAI Chat API
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // or gpt-4, gpt-3.5, etc.
+        messages: [{ role: "user", content: message }],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      return new Response(JSON.stringify({ error }), { status: 500 });
+    }
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content ?? "";
+
+    return new Response(JSON.stringify({ reply }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      { status: 500 }
+    );
+  }
+});
