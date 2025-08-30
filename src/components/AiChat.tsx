@@ -153,17 +153,27 @@ export const AiChat = () => {
     await saveMessage(userMessage);
 
     try {
+      console.log('Sending message to AI chat function...');
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message: inputMessage,
-          conversationHistory: messages.map(msg => ({
+          conversationHistory: messages.slice(1).map(msg => ({
             role: msg.role,
             content: msg.content
           }))
         }
       });
 
-      if (error) throw error;
+      console.log('AI chat response:', data, error);
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Function call failed');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'AI response failed');
+      }
 
       const assistantMessage: Message = {
         role: 'assistant',
@@ -180,13 +190,13 @@ export const AiChat = () => {
       console.error('Error sending message:', error);
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: `Failed to send message: ${error.message}`,
         variant: "destructive"
       });
 
       const errorMessage: Message = {
         role: 'assistant',
-        content: "I'm sorry, I'm having trouble right now. Please try again in a moment.",
+        content: "I apologize, but I'm experiencing technical difficulties. Please try again in a moment.",
         timestamp: new Date()
       };
 

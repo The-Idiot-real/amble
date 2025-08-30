@@ -42,19 +42,19 @@ export const Header = ({
 
   return (
     <>
-    <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
+    <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+      <div className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center relative">
-            <div className="header-notch bg-gradient-to-r from-primary to-accent px-8 py-3 flex items-center justify-center relative z-10">
-              <div className="w-12 h-12 rounded-xl p-1">
-                <img 
-                  src={theme === "dark" ? ambleLogoDark : ambleLogoLight} 
-                  alt="Amble Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-primary to-accent p-2">
+              <img 
+                src={theme === "dark" ? ambleLogoDark : ambleLogoLight} 
+                alt="Amble Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
+            <span className="font-bold text-xl text-foreground">AMBLE</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -94,7 +94,7 @@ export const Header = ({
           </nav>
 
           {/* Search Bar and Theme Toggle */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             <form onSubmit={handleSearch} className="flex items-center space-x-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -103,10 +103,10 @@ export const Header = ({
                   placeholder="Search files..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64"
+                  className="pl-10 w-64 bg-background/50 border-muted-foreground/20"
                 />
               </div>
-              <Button type="submit" size="sm" className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent">
+              <Button type="submit" size="sm" className="bg-accent text-accent-foreground hover:bg-accent/80 px-6">
                 Search
               </Button>
             </form>
