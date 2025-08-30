@@ -37,40 +37,44 @@ export const Header = ({
 
   return (
     <>
-      {/* make header relative so we can pin the notch to the extreme left */}
+      {/* header is relative so notch can be absolutely pinned to the extreme left */}
       <header className="relative bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        {/* LEFT NOTCH + BIG CIRCULAR LOGO (desktop only) */}
+        {/* DESKTOP ONLY: left-notch that reaches the extreme left of the viewport */}
         <div
           className="
             hidden md:flex
             absolute left-0 top-0 h-16 w-56
             items-center pl-5
-            bg-background border-b border-border
-            [clip-path:polygon(0_0,100%_0,calc(100%-22px)_50%,100%_100%,0_100%)]
+            bg-background/95
+            rounded-br-[36px]
+            z-30
+            overflow-hidden
           "
         >
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-r from-primary to-accent p-2 shadow-lg">
+            {/* NO padding around the image so there's no 'ring' */}
+            <div className="w-14 h-14 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center overflow-hidden">
               <img
-                src={theme === 'dark' ? ambleLogoDark : ambleLogoLight}
+                src={theme === "dark" ? ambleLogoDark : ambleLogoLight}
                 alt="Amble Logo"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
               />
             </div>
+
             <span className="font-bold text-xl text-foreground">AMBLE</span>
           </Link>
         </div>
 
-        {/* main row; pad-left on md+ so content clears the notch width */}
+        {/* main content area — on md+ we pad left so content clears the notch width */}
         <div className="container mx-auto px-6 py-3 md:pl-56">
           <div className="flex items-center justify-between">
-            {/* Mobile logo (desktop uses the notch block above) */}
+            {/* Mobile logo (shown only on small screens) */}
             <Link to="/" className="flex items-center space-x-2 md:hidden">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-accent p-2">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center overflow-hidden">
                 <img
-                  src={theme === 'dark' ? ambleLogoDark : ambleLogoLight}
+                  src={theme === "dark" ? ambleLogoDark : ambleLogoLight}
                   alt="Amble Logo"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <span className="font-bold text-xl text-foreground">AMBLE</span>
