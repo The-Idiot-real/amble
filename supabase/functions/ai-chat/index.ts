@@ -14,8 +14,9 @@ serve(async (req) => {
   try {
     const { message, conversationHistory = [], files = [] } = await req.json();
     
-    const OPENAI_API_KEY = Deno.env.get('ChatGPT_API');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
+      console.error('OpenAI API key not found');
       throw new Error('OpenAI API key not configured');
     }
 

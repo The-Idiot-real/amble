@@ -42,51 +42,61 @@ export const Header = ({
 
   return (
     <>
-    <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-3">
+    <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 shadow-lg">
+      <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-primary to-accent p-2">
+          <Link to="/" className="flex items-center space-x-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent p-2 shadow-colorful">
               <img 
-                src={theme === "dark" ? ambleLogoDark : ambleLogoLight} 
+                src={ambleLogoDark} 
                 alt="Amble Logo" 
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="font-bold text-xl text-foreground">AMBLE</span>
+            <span className="font-bold text-2xl bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              AMBLE
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
               to="/" 
-              className={`font-medium transition-colors hover:text-primary ${
-                isActive('/') ? 'text-primary' : 'text-muted-foreground'
+              className={`font-semibold text-lg transition-all duration-300 hover:scale-105 ${
+                isActive('/') 
+                  ? 'text-primary drop-shadow-lg' 
+                  : 'text-slate-300 hover:text-primary'
               }`}
             >
               Home
             </Link>
             <Link 
               to="/upload" 
-              className={`font-medium transition-colors hover:text-primary ${
-                isActive('/upload') ? 'text-primary' : 'text-muted-foreground'
+              className={`font-semibold text-lg transition-all duration-300 hover:scale-105 ${
+                isActive('/upload') 
+                  ? 'text-secondary drop-shadow-lg' 
+                  : 'text-slate-300 hover:text-secondary'
               }`}
             >
               Upload
             </Link>
             <Link 
               to="/convert" 
-              className={`font-medium transition-colors hover:text-primary ${
-                isActive('/convert') ? 'text-primary' : 'text-muted-foreground'
+              className={`font-semibold text-lg transition-all duration-300 hover:scale-105 ${
+                isActive('/convert') 
+                  ? 'text-accent drop-shadow-lg' 
+                  : 'text-slate-300 hover:text-accent'
               }`}
             >
               Convert
             </Link>
             <Link 
               to="/about" 
-              className={`font-medium transition-colors hover:text-primary ${
-                isActive('/about') ? 'text-primary' : 'text-muted-foreground'
+              className={`font-semibold text-lg transition-all duration-300 hover:scale-105 ${
+                isActive('/about') 
+                  ? 'text-tertiary drop-shadow-lg' 
+                  : 'text-slate-300 hover:text-tertiary'
               }`}
             >
               About
@@ -94,19 +104,23 @@ export const Header = ({
           </nav>
 
           {/* Search Bar and Theme Toggle */}
-          <div className="hidden md:flex items-center space-x-3">
-            <form onSubmit={handleSearch} className="flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-4">
+            <form onSubmit={handleSearch} className="flex items-center space-x-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <Input
                   type="text"
                   placeholder="Search files..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64 bg-background/50 border-muted-foreground/20"
+                  className="pl-11 w-72 bg-slate-700/70 border-slate-600 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary rounded-xl"
                 />
               </div>
-              <Button type="submit" size="sm" className="bg-accent text-accent-foreground hover:bg-accent/80 px-6">
+              <Button 
+                type="submit" 
+                size="sm" 
+                className="bg-gradient-to-r from-primary to-accent text-white hover:from-primary-dark hover:to-accent/80 px-6 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
                 Search
               </Button>
             </form>
@@ -115,10 +129,10 @@ export const Header = ({
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="relative"
+              className="relative bg-slate-700/50 hover:bg-slate-600 text-slate-300 hover:text-white rounded-xl w-12 h-12 transition-all duration-300 hover:scale-105"
             >
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">Toggle theme</span>
             </Button>
           </div>
