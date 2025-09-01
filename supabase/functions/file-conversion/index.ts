@@ -191,47 +191,69 @@ For binary files, this serves as a metadata representation.`;
   }
 }
 
+// Use pdf-lib for proper PDF generation
+import { PDFDocument, rgb } from "https://esm.sh/pdf-lib@1.17.1";
+
 async function convertToPDF(fileBlob: Blob, originalType: string, originalName: string): Promise<Blob> {
-  // Simple PDF creation using basic text
-  const content = originalType.includes('text') ? await fileBlob.text() : 
-    `File: ${originalName}\nType: ${originalType}\nSize: ${fileBlob.size} bytes\nConverted: ${new Date().toISOString()}`;
+  console.log(`Converting ${originalName} to PDF`);
   
-  // Create a simple PDF-like structure (this is a basic implementation)
-  const pdfContent = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>
-endobj
-4 0 obj
-<< /Length ${content.length + 50} >>
-stream
-BT
-/F1 12 Tf
-50 750 Td
-(${content.replace(/\n/g, ') Tj T* (')}) Tj
-ET
-endstream
-endobj
-xref
-0 5
-0000000000 65535 f 
-0000000015 00000 n 
-0000000074 00000 n 
-0000000131 00000 n 
-0000000230 00000 n 
-trailer
-<< /Size 5 /Root 1 0 R >>
-startxref
-${350 + content.length}
-%%EOF`;
-  
-  return new Blob([pdfContent], { type: 'application/pdf' });
+  try {
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([612, 792]); // Letter size
+    
+    let content = '';
+    if (originalType.includes('text') || originalType.includes('json') || originalType.includes('csv')) {
+      content = await fileBlob.text();
+    } else {
+      content = `File: ${originalName}
+Type: ${originalType}
+Size: ${fileBlob.size} bytes
+Converted: ${new Date().toISOString()}
+
+Note: This file could not be directly converted to PDF.
+This is a metadata representation of the original file.`;
+    }
+    
+    // Split content into lines and add to PDF
+    const lines = content.split('\n');
+    const fontSize = 12;
+    const margin = 50;
+    const lineHeight = fontSize * 1.2;
+    let yPosition = 750;
+    
+    for (const line of lines) {
+      if (yPosition < margin) {
+        // Add new page if needed
+        const newPage = pdfDoc.addPage([612, 792]);
+        yPosition = 750;
+        newPage.drawText(line, {
+          x: margin,
+          y: yPosition,
+          size: fontSize,
+          color: rgb(0, 0, 0),
+        });
+      } else {
+        page.drawText(line, {
+          x: margin,
+          y: yPosition,
+          size: fontSize,
+          color: rgb(0, 0, 0),
+        });
+      }
+      yPosition -= lineHeight;
+    }
+    
+    const pdfBytes = await pdfDoc.save();
+    return new Blob([pdfBytes], { type: 'application/pdf' });
+    
+  } catch (error) {
+    console.error('PDF conversion error:', error);
+    throw new Error(`Failed to create PDF: ${error.message}`);
+  }
 }
+
+// Use PapaParse for proper CSV handling
+import Papa from "https://esm.sh/papaparse@5.4.1";
 
 async function convertToJSON(fileBlob: Blob, originalType: string, originalName: string): Promise<Blob> {
   if (originalType.includes('json')) {
@@ -243,24 +265,18 @@ async function convertToJSON(fileBlob: Blob, originalType: string, originalName:
     } catch (error) {
       throw new Error('Invalid JSON file');
     }
-  } else if (originalType.includes('csv')) {
-    // CSV to JSON
+  } else if (originalType.includes('csv') || originalName.toLowerCase().endsWith('.csv')) {
+    // CSV to JSON using PapaParse
     const csvText = await fileBlob.text();
-    const lines = csvText.split('\n').filter(line => line.trim());
-    
-    if (lines.length === 0) {
-      return new Blob(['[]'], { type: 'application/json' });
-    }
-    
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const data = lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-      const obj: any = {};
-      headers.forEach((header, index) => {
-        obj[header] = values[index] || '';
-      });
-      return obj;
+    const { data, errors } = Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true
     });
+    
+    if (errors.length > 0) {
+      console.warn('CSV parsing warnings:', errors);
+    }
     
     return new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   } else {
@@ -278,35 +294,33 @@ async function convertToJSON(fileBlob: Blob, originalType: string, originalName:
 }
 
 async function convertToCSV(fileBlob: Blob, originalType: string, originalName: string): Promise<Blob> {
-  if (originalType.includes('csv')) {
+  if (originalType.includes('csv') || originalName.toLowerCase().endsWith('.csv')) {
     // Already CSV
     return new Blob([await fileBlob.text()], { type: 'text/csv' });
-  } else if (originalType.includes('json')) {
-    // JSON to CSV
+  } else if (originalType.includes('json') || originalName.toLowerCase().endsWith('.json')) {
+    // JSON to CSV using PapaParse
     try {
       const jsonText = await fileBlob.text();
       const data = JSON.parse(jsonText);
       
       if (!Array.isArray(data)) {
-        throw new Error('JSON must be an array for CSV conversion');
+        // Convert single object to array
+        const flatData = [data];
+        const csv = Papa.unparse(flatData);
+        return new Blob([csv], { type: 'text/csv' });
       }
       
       if (data.length === 0) {
         return new Blob([''], { type: 'text/csv' });
       }
       
-      const headers = Object.keys(data[0]);
-      const csvLines = [headers.join(',')];
-      
-      data.forEach(row => {
-        const values = headers.map(header => {
-          const value = row[header];
-          return value !== null && value !== undefined ? String(value) : '';
-        });
-        csvLines.push(values.join(','));
+      // Use PapaParse to generate proper CSV
+      const csv = Papa.unparse(data, {
+        quotes: true,
+        delimiter: ","
       });
       
-      return new Blob([csvLines.join('\n')], { type: 'text/csv' });
+      return new Blob([csv], { type: 'text/csv' });
     } catch (error) {
       throw new Error('Invalid JSON for CSV conversion');
     }

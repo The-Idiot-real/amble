@@ -62,6 +62,9 @@ export const AiChat = () => {
     try {
       const sessionId = getOrCreateSessionId();
       
+      // Set the session context for RLS
+      await supabase.rpc('set_session_context', { session_id_param: sessionId });
+      
       // First check if there's already a conversation for this session using secure function
       const { data: existing, error: existingError } = await supabase
         .rpc('get_conversation_by_session', { session_id_param: sessionId });
@@ -154,6 +157,10 @@ export const AiChat = () => {
 
     try {
       console.log('Sending message to AI chat function...');
+      
+      // Set the session context for RLS
+      const sessionId = getOrCreateSessionId();
+      await supabase.rpc('set_session_context', { session_id_param: sessionId });
       
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
