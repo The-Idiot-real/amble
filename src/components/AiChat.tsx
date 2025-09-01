@@ -1,60 +1,110 @@
 // src/components/AiChat.tsx
 import React, { useState } from "react";
 
-const AiChat = () => {
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+type Msg = { role: "user" | "assistant" | "system"; content: string };
+
+const STREAMING = true; // set false if you want the simpler non-stream flow first
+
+export function AiChat() {
+  const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const sendMessage = async () => {
-    const newMessage = { role: "user", content: input };
-    setMessages((prev) => [...prev, newMessage]);
+  async function sendMessage() {
+    const text = input.trim();
+    if (!text || loading) return;
+
+    const newUserMsg: Msg = { role: "user", content: text };
+    setMessages((m) => [...m, newUserMsg]);
     setInput("");
+    setLoading(true);
 
-    const response = await fetch("/functions/v1/ai-chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: [...messages, newMessage] }),
-    });
+    try {
+      if (!STREAMING) {
+        // ---- Non-streaming (easiest baseline) ----
+        const res = await fetch("/functions/v1/ai-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: [...messages, newUserMsg], stream: false }),
+        });
 
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-    let aiReply = "";
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        const content = data?.content ?? "";
+        setMessages((m) => [...m, { role: "assistant", content }]);
+      } else {
+        // ---- Streaming (consume plain text stream) ----
+        const res = await fetch("/functions/v1/ai-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: [...messages, newUserMsg], stream: true }),
+        });
+        if (!res.ok || !res.body) throw new Error(await res.text());
 
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        aiReply += decoder.decode(value, { stream: true });
-        setMessages((prev) => [
-          ...prev.filter((m) => m.role !== "assistant"),
-          { role: "assistant", content: aiReply },
-        ]);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let assistantText = "";
+
+        // Add a placeholder assistant message we update as chunks arrive
+        setMessages((m) => [...m, { role: "assistant", content: "" }]);
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          assistantText += decoder.decode(value, { stream: true });
+
+          // Update the last assistant message
+          setMessages((m) => {
+            const copy = m.slice();
+            const lastIdx = copy.length - 1;
+            if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
+              copy[lastIdx] = { role: "assistant", content: assistantText };
+            }
+            return copy;
+          });
+        }
       }
+    } catch (err: any) {
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: `⚠️ Error: ${err?.message || String(err)}` },
+      ]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="p-4">
-      <div className="space-y-2">
+    <div className="p-4 max-w-2xl mx-auto">
+      <div className="border rounded p-3 h-96 overflow-auto bg-white/70">
         {messages.map((m, i) => (
-          <div key={i} className={m.role === "user" ? "text-blue-500" : "text-green-500"}>
-            <b>{m.role}:</b> {m.content}
+          <div
+            key={i}
+            className={`mb-2 ${m.role === "user" ? "text-blue-700" : "text-slate-800"}`}
+          >
+            <b>{m.role}:</b>{" "}
+            <span style={{ whiteSpace: "pre-wrap" }}>{m.content}</span>
           </div>
         ))}
+        {loading && <div className="text-slate-500">Thinking…</div>}
       </div>
-      <div className="mt-4 flex gap-2">
+
+      <div className="mt-3 flex gap-2">
         <input
+          className="border rounded p-2 flex-1"
+          placeholder="Type your message…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="border rounded p-2 flex-1"
-          placeholder="Type your message..."
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
-        <button onClick={sendMessage} className="bg-blue-500 text-white px-4 py-2 rounded">
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          onClick={sendMessage}
+          disabled={loading || !input.trim()}
+        >
           Send
         </button>
       </div>
     </div>
   );
-};
-
-export default AiChat;
+}
