@@ -154,6 +154,7 @@ export const AiChat = () => {
 
     try {
       console.log('Sending message to AI chat function...');
+      
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message: inputMessage,

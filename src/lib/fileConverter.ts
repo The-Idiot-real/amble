@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
 
 export interface ConversionOptions {
   quality?: number;
@@ -397,18 +398,19 @@ async function convertToJSON(file: File): Promise<Blob> {
       return new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
     }
     
-    if (fileType.includes('csv')) {
+    if (fileType.includes('csv') || file.name.toLowerCase().endsWith('.csv')) {
+      // Use PapaParse for proper CSV parsing
       const text = await file.text();
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
-      const data = lines.slice(1).map(line => {
-        const values = line.split(',');
-        const obj: any = {};
-        headers.forEach((header, index) => {
-          obj[header] = values[index]?.trim() || '';
-        });
-        return obj;
+      const { data, errors } = Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: true
       });
+      
+      if (errors.length > 0) {
+        console.warn('CSV parsing warnings:', errors);
+      }
+      
       return new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     }
     
@@ -451,33 +453,44 @@ async function convertToCSV(file: File): Promise<Blob> {
   const fileType = file.type.toLowerCase();
   
   try {
-    if (fileType.includes('csv')) {
+    if (fileType.includes('csv') || file.name.toLowerCase().endsWith('.csv')) {
       // Already CSV, just return as is
       return new Blob([await file.text()], { type: 'text/csv' });
     }
     
-    if (fileType.includes('json')) {
+    if (fileType.includes('json') || file.name.toLowerCase().endsWith('.json')) {
       const text = await file.text();
       const jsonData = JSON.parse(text);
       
-      if (Array.isArray(jsonData) && jsonData.length > 0 && typeof jsonData[0] === 'object') {
-        // Convert array of objects to CSV
-        const headers = Object.keys(jsonData[0]);
-        const csvLines = [
-          headers.join(','),
-          ...jsonData.map(obj => 
-            headers.map(header => {
-              const value = obj[header];
-              // Escape commas and quotes in CSV
-              if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-                return `"${value.replace(/"/g, '""')}"`;
-              }
-              return value || '';
-            }).join(',')
-          )
-        ];
-        return new Blob([csvLines.join('\n')], { type: 'text/csv' });
+      // Flatten nested objects
+      const flatten = (obj: any, prefix = ""): any => {
+        return Object.keys(obj).reduce((acc: any, k) => {
+          const pre = prefix.length ? prefix + "." : "";
+          if (typeof obj[k] === "object" && obj[k] !== null && !Array.isArray(obj[k])) {
+            Object.assign(acc, flatten(obj[k], pre + k));
+          } else {
+            acc[pre + k] = obj[k];
+          }
+          return acc;
+        }, {});
+      };
+
+      let data = jsonData;
+      if (Array.isArray(jsonData)) {
+        data = jsonData.map(item => typeof item === 'object' ? flatten(item) : { value: item });
+      } else if (typeof jsonData === 'object') {
+        data = [flatten(jsonData)];
+      } else {
+        data = [{ value: jsonData }];
       }
+      
+      // Use PapaParse to generate proper CSV
+      const csv = Papa.unparse(data, {
+        quotes: true,
+        delimiter: ","
+      });
+      
+      return new Blob([csv], { type: 'text/csv' });
     }
     
     if (fileType.includes('spreadsheet') || fileType.includes('excel')) {

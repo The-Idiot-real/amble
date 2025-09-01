@@ -16,6 +16,7 @@ interface UploadedFile {
   progress: number;
   status: 'uploading' | 'completed' | 'error';
   file: File;
+  customName: string;
 }
 
 interface FileFormData {
@@ -62,7 +63,8 @@ const Upload = () => {
       size: formatFileSize(file.size),
       progress: 0,
       status: 'uploading' as const,
-      file: file
+      file: file,
+      customName: file.name // Add custom name field
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
@@ -72,9 +74,12 @@ const Upload = () => {
       const file = fileList[i];
       
       try {
+        const currentFile = files.find(f => f.file === file);
+        const uploadName = currentFile?.customName || file.name;
+        
         await uploadFile({
           file: file,
-          name: formData.name || file.name,
+          name: uploadName,
           topic: formData.topic || undefined,
           description: formData.description || undefined,
           tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined
@@ -200,7 +205,25 @@ const Upload = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{file.name}</p>
+                            {file.status === 'uploading' ? (
+                              <Input
+                                value={file.customName}
+                                onChange={(e) => {
+                                  setFiles(currentFiles => {
+                                    const updatedFiles = [...currentFiles];
+                                    const fileIndex = updatedFiles.findIndex(f => f === file);
+                                    if (fileIndex !== -1) {
+                                      updatedFiles[fileIndex].customName = e.target.value;
+                                    }
+                                    return updatedFiles;
+                                  });
+                                }}
+                                className="text-sm font-medium h-6 border-none p-0 shadow-none"
+                                placeholder="Enter filename..."
+                              />
+                            ) : (
+                              <p className="text-sm font-medium truncate">{file.customName}</p>
+                            )}
                             <p className="text-xs text-muted-foreground">{file.size}</p>
                           </div>
                         </div>
