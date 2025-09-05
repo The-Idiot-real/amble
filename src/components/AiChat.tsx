@@ -15,6 +15,9 @@ export function AiChat() {
     if (!text || loading) return;
 
     const newUserMsg: Msg = { role: "user", content: text };
+    const messagesWithSystem = messages.length === 0 
+      ? [{ role: "system" as const, content: "You are a helpful AI assistant. Be concise and friendly." }, newUserMsg]
+      : [...messages, newUserMsg];
     setMessages((m) => [...m, newUserMsg]);
     setInput("");
     setLoading(true);
@@ -22,10 +25,10 @@ export function AiChat() {
     try {
       if (!STREAMING) {
         // ---- Non-streaming (easiest baseline) ----
-        const res = await fetch("/functions/v1/ai-chat", {
+        const res = await fetch("https://dapxjgvvvxkbmshwnsvc.supabase.co/functions/v1/ai-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: [...messages, newUserMsg], stream: false }),
+          body: JSON.stringify({ messages: messagesWithSystem, stream: false }),
         });
 
         if (!res.ok) throw new Error(await res.text());
@@ -34,10 +37,10 @@ export function AiChat() {
         setMessages((m) => [...m, { role: "assistant", content }]);
       } else {
         // ---- Streaming (consume plain text stream) ----
-        const res = await fetch("/functions/v1/ai-chat", {
+        const res = await fetch("https://dapxjgvvvxkbmshwnsvc.supabase.co/functions/v1/ai-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: [...messages, newUserMsg], stream: true }),
+          body: JSON.stringify({ messages: messagesWithSystem, stream: true }),
         });
         if (!res.ok || !res.body) throw new Error(await res.text());
 
