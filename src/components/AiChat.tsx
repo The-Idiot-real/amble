@@ -3,8 +3,6 @@ import React, { useState } from "react";
 
 type Msg = { role: "user" | "assistant" | "system"; content: string };
 
-const STREAMING = true; // set false if you want the simpler non-stream flow first
-
 export function AiChat() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -15,96 +13,46 @@ export function AiChat() {
     if (!text || loading) return;
 
     const newUserMsg: Msg = { role: "user", content: text };
-    const messagesWithSystem = messages.length === 0 
-      ? [{ role: "system" as const, content: "You are a helpful AI assistant. Be concise and friendly." }, newUserMsg]
-      : [...messages, newUserMsg];
+    const messagesWithSystem =
+      messages.length === 0
+        ? [
+            {
+              role: "system" as const,
+              content:
+                "You are a helpful AI assistant. Be concise and friendly.",
+            },
+            newUserMsg,
+          ]
+        : [...messages, newUserMsg];
+
     setMessages((m) => [...m, newUserMsg]);
     setInput("");
     setLoading(true);
 
     try {
-      console.log("Sending messages:", messagesWithSystem);
-      
-      // Call OpenAI directly with hardcoded API key
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer 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"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "gpt-4o-mini",
           messages: messagesWithSystem,
           temperature: 0.7,
-          stream: STREAMING
-        })
+        }),
       });
 
-      console.log("Response status:", response.status);
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error:", errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+        const err = await response.text();
+        throw new Error(`HTTP ${response.status}: ${err}`);
       }
 
-      if (!STREAMING) {
-        // Non-streaming response
-        const data = await response.json();
-        const content = data?.choices?.[0]?.message?.content ?? "";
-        setMessages((m) => [...m, { role: "assistant", content }]);
-      } else {
-        // Streaming response
-        if (!response.body) throw new Error("No response body for streaming");
-        
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let assistantText = "";
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content ?? "";
 
-        // Add a placeholder assistant message we update as chunks arrive
-        setMessages((m) => [...m, { role: "assistant", content: "" }]);
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') continue;
-              
-              try {
-                const json = JSON.parse(data);
-                const delta = json?.choices?.[0]?.delta?.content ?? "";
-                if (delta) {
-                  assistantText += delta;
-                  
-                  // Update the last assistant message
-                  setMessages((m) => {
-                    const copy = m.slice();
-                    const lastIdx = copy.length - 1;
-                    if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
-                      copy[lastIdx] = { role: "assistant", content: assistantText };
-                    }
-                    return copy;
-                  });
-                }
-              } catch (e) {
-                // Ignore JSON parse errors for non-data lines
-              }
-            }
-          }
-        }
-      }
+      setMessages((m) => [...m, { role: "assistant", content }]);
     } catch (err: any) {
-      console.error("Full error object:", err);
-      const errorMessage = err?.message || String(err);
-      console.error("Error message:", errorMessage);
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: `⚠️ Error: ${errorMessage}` },
+        { role: "assistant", content: `⚠️ Error: ${err.message}` },
       ]);
     } finally {
       setLoading(false);
@@ -117,7 +65,9 @@ export function AiChat() {
         {messages.map((m, i) => (
           <div
             key={i}
-            className={`mb-2 ${m.role === "user" ? "text-blue-700" : "text-slate-800"}`}
+            className={`mb-2 ${
+              m.role === "user" ? "text-blue-700" : "text-slate-800"
+            }`}
           >
             <b>{m.role}:</b>{" "}
             <span style={{ whiteSpace: "pre-wrap" }}>{m.content}</span>
