@@ -23,26 +23,41 @@ export function AiChat() {
     setLoading(true);
 
     try {
+      console.log("Sending messages:", messagesWithSystem);
       if (!STREAMING) {
         // ---- Non-streaming (easiest baseline) ----
-        const res = await fetch("https://dapxjgvvvxkbmshwnsvc.supabase.co/functions/v1/ai-chat", {
+        const url = "https://dapxjgvvvxkbmshwnsvc.supabase.co/functions/v1/ai-chat";
+        console.log("Calling URL:", url);
+        const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: messagesWithSystem, stream: false }),
         });
 
-        if (!res.ok) throw new Error(await res.text());
+        console.log("Response status:", res.status);
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("API Error:", errorText);
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
+        }
         const data = await res.json();
         const content = data?.content ?? "";
         setMessages((m) => [...m, { role: "assistant", content }]);
       } else {
         // ---- Streaming (consume plain text stream) ----
-        const res = await fetch("https://dapxjgvvvxkbmshwnsvc.supabase.co/functions/v1/ai-chat", {
+        const url = "https://dapxjgvvvxkbmshwnsvc.supabase.co/functions/v1/ai-chat";
+        console.log("Calling streaming URL:", url);
+        const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: messagesWithSystem, stream: true }),
         });
-        if (!res.ok || !res.body) throw new Error(await res.text());
+        console.log("Streaming response status:", res.status);
+        if (!res.ok || !res.body) {
+          const errorText = await res.text();
+          console.error("Streaming API Error:", errorText);
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
+        }
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -68,9 +83,12 @@ export function AiChat() {
         }
       }
     } catch (err: any) {
+      console.error("Full error object:", err);
+      const errorMessage = err?.message || String(err);
+      console.error("Error message:", errorMessage);
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: `⚠️ Error: ${err?.message || String(err)}` },
+        { role: "assistant", content: `⚠️ Error: ${errorMessage}` },
       ]);
     } finally {
       setLoading(false);
