@@ -1,7 +1,8 @@
-// src/components/AiChat.tsx
+"use client";
 import React, { useState } from "react";
 
 type Msg = { role: "user" | "assistant" | "system"; content: string };
+const STREAMING = true;
 
 export function AiChat() {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -13,17 +14,9 @@ export function AiChat() {
     if (!text || loading) return;
 
     const newUserMsg: Msg = { role: "user", content: text };
-    const messagesWithSystem =
-      messages.length === 0
-        ? [
-            {
-              role: "system" as const,
-              content:
-                "You are a helpful AI assistant. Be concise and friendly.",
-            },
-            newUserMsg,
-          ]
-        : [...messages, newUserMsg];
+    const messagesWithSystem = messages.length === 0
+      ? [{ role: "system", content: "You are a helpful AI assistant. Be concise and friendly." }, newUserMsg]
+      : [...messages, newUserMsg];
 
     setMessages((m) => [...m, newUserMsg]);
     setInput("");
@@ -40,15 +33,45 @@ export function AiChat() {
         }),
       });
 
-      if (!response.ok) {
-        const err = await response.text();
-        throw new Error(`HTTP ${response.status}: ${err}`);
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantText = "";
+
+      // Add placeholder message
+      setMessages((m) => [...m, { role: "assistant", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
+
+        for (const line of lines) {
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+
+          try {
+            const json = JSON.parse(data);
+            const delta = json?.choices?.[0]?.delta?.content ?? "";
+            if (delta) {
+              assistantText += delta;
+              setMessages((m) => {
+                const copy = m.slice();
+                const lastIdx = copy.length - 1;
+                if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
+                  copy[lastIdx] = { role: "assistant", content: assistantText };
+                }
+                return copy;
+              });
+            }
+          } catch (e) {
+            // ignore non-JSON lines
+          }
+        }
       }
-
-      const data = await response.json();
-      const content = data?.choices?.[0]?.message?.content ?? "";
-
-      setMessages((m) => [...m, { role: "assistant", content }]);
     } catch (err: any) {
       setMessages((m) => [
         ...m,
@@ -65,9 +88,7 @@ export function AiChat() {
         {messages.map((m, i) => (
           <div
             key={i}
-            className={`mb-2 ${
-              m.role === "user" ? "text-blue-700" : "text-slate-800"
-            }`}
+            className={`mb-2 ${m.role === "user" ? "text-blue-700" : "text-slate-800"}`}
           >
             <b>{m.role}:</b>{" "}
             <span style={{ whiteSpace: "pre-wrap" }}>{m.content}</span>
