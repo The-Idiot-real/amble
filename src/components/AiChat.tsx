@@ -27,10 +27,18 @@ export default function AiChat() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: messagesWithSystem, stream: STREAMING }),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: messagesWithSystem,
+          temperature: 0.7,
+          stream: STREAMING,
+        }),
       });
 
       if (!response.ok) {
@@ -58,9 +66,11 @@ export default function AiChat() {
             if (line.startsWith("data: ")) {
               const data = line.slice(6);
               if (data === "[DONE]") return;
+
               try {
                 const json = JSON.parse(data);
                 const delta = json?.choices?.[0]?.delta?.content ?? "";
+
                 if (delta) {
                   assistantText += delta;
                   setMessages((m) => {
@@ -72,7 +82,7 @@ export default function AiChat() {
                     return copy;
                   });
                 }
-              } catch {}
+              } catch { }
             }
           });
         }
@@ -88,33 +98,31 @@ export default function AiChat() {
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <div className="border rounded p-3 h-96 overflow-auto bg-white/70">
+    <div className="p-4 border rounded-lg max-w-2xl mx-auto">
+      <div className="space-y-4 mb-4">
         {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`mb-2 ${m.role === "user" ? "text-blue-700" : "text-slate-800"}`}
-          >
-            <b>{m.role}:</b>{" "}
-            <span style={{ whiteSpace: "pre-wrap" }}>{m.content}</span>
+          <div key={i} className="p-2 bg-gray-50 rounded">
+            <strong>{m.role}:</strong> {m.content}
           </div>
         ))}
-        {loading && <div className="text-slate-500">Thinking…</div>}
       </div>
 
-      <div className="mt-3 flex gap-2">
+      {loading && <div className="text-gray-500">Thinking…</div>}
+
+      <div className="flex gap-2">
         <input
-          className="border rounded p-2 flex-1"
-          placeholder="Type your message…"
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           disabled={loading}
+          className="flex-1 p-2 border rounded"
+          placeholder="Ask me anything..."
         />
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
           onClick={sendMessage}
-          disabled={loading || !input.trim()}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
         >
           Send
         </button>
