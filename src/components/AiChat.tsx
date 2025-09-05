@@ -1,10 +1,10 @@
-"use client";
 import React, { useState } from "react";
 
 type Msg = { role: "user" | "assistant" | "system"; content: string };
+
 const STREAMING = true;
 
-export function AiChat() {
+export default function AiChat() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,9 +14,13 @@ export function AiChat() {
     if (!text || loading) return;
 
     const newUserMsg: Msg = { role: "user", content: text };
-    const messagesWithSystem = messages.length === 0
-      ? [{ role: "system", content: "You are a helpful AI assistant. Be concise and friendly." }, newUserMsg]
-      : [...messages, newUserMsg];
+    const messagesWithSystem =
+      messages.length === 0
+        ? [
+            { role: "system", content: "You are a helpful AI assistant. Be concise and friendly." },
+            newUserMsg,
+          ]
+        : [...messages, newUserMsg];
 
     setMessages((m) => [...m, newUserMsg]);
     setInput("");
@@ -26,56 +30,57 @@ export function AiChat() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: messagesWithSystem,
-          temperature: 0.7,
-        }),
+        body: JSON.stringify({ messages: messagesWithSystem, stream: STREAMING }),
       });
 
-      if (!response.body) throw new Error("No response body");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "API error");
+      }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantText = "";
+      if (!STREAMING) {
+        const data = await response.json();
+        const content = data?.choices?.[0]?.message?.content ?? "";
+        setMessages((m) => [...m, { role: "assistant", content }]);
+      } else {
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        let assistantText = "";
 
-      // Add placeholder message
-      setMessages((m) => [...m, { role: "assistant", content: "" }]);
+        setMessages((m) => [...m, { role: "assistant", content: "" }]);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
-
-        for (const line of lines) {
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") continue;
-
-          try {
-            const json = JSON.parse(data);
-            const delta = json?.choices?.[0]?.delta?.content ?? "";
-            if (delta) {
-              assistantText += delta;
-              setMessages((m) => {
-                const copy = m.slice();
-                const lastIdx = copy.length - 1;
-                if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
-                  copy[lastIdx] = { role: "assistant", content: assistantText };
+          const chunk = decoder.decode(value, { stream: true });
+          chunk.split("\n").forEach((line) => {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") return;
+              try {
+                const json = JSON.parse(data);
+                const delta = json?.choices?.[0]?.delta?.content ?? "";
+                if (delta) {
+                  assistantText += delta;
+                  setMessages((m) => {
+                    const copy = m.slice();
+                    const lastIdx = copy.length - 1;
+                    if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
+                      copy[lastIdx] = { role: "assistant", content: assistantText };
+                    }
+                    return copy;
+                  });
                 }
-                return copy;
-              });
+              } catch {}
             }
-          } catch (e) {
-            // ignore non-JSON lines
-          }
+          });
         }
       }
     } catch (err: any) {
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: `⚠️ Error: ${err.message}` },
+        { role: "assistant", content: `⚠️ Error: ${err?.message || String(err)}` },
       ]);
     } finally {
       setLoading(false);
@@ -104,6 +109,7 @@ export function AiChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          disabled={loading}
         />
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
