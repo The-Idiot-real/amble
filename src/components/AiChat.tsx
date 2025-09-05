@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Msg = { role: "user" | "assistant" | "system"; content: string };
 
@@ -17,7 +20,7 @@ export default function AiChat() {
     const messagesWithSystem =
       messages.length === 0
         ? [
-            { role: "system", content: "You are a helpful AI assistant. Be concise and friendly." },
+            { role: "system", content: "You are a helpful AI assistant for file management and conversion. Be concise and friendly." },
             newUserMsg,
           ]
         : [...messages, newUserMsg];
@@ -27,64 +30,45 @@ export default function AiChat() {
     setLoading(true);
 
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: {
           messages: messagesWithSystem,
-          temperature: 0.7,
           stream: STREAMING,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "API error");
+      if (error) {
+        throw new Error(error.message);
       }
 
       if (!STREAMING) {
-        const data = await response.json();
-        const content = data?.choices?.[0]?.message?.content ?? "";
+        const content = data?.content ?? "";
         setMessages((m) => [...m, { role: "assistant", content }]);
       } else {
-        const reader = response.body!.getReader();
-        const decoder = new TextDecoder();
-        let assistantText = "";
+        // Handle streaming response from Supabase edge function
+        if (data.body) {
+          const reader = data.body.getReader();
+          const decoder = new TextDecoder();
+          let assistantText = "";
 
-        setMessages((m) => [...m, { role: "assistant", content: "" }]);
+          setMessages((m) => [...m, { role: "assistant", content: "" }]);
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          chunk.split("\n").forEach((line) => {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") return;
-
-              try {
-                const json = JSON.parse(data);
-                const delta = json?.choices?.[0]?.delta?.content ?? "";
-
-                if (delta) {
-                  assistantText += delta;
-                  setMessages((m) => {
-                    const copy = m.slice();
-                    const lastIdx = copy.length - 1;
-                    if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
-                      copy[lastIdx] = { role: "assistant", content: assistantText };
-                    }
-                    return copy;
-                  });
-                }
-              } catch { }
-            }
-          });
+            const chunk = decoder.decode(value, { stream: true });
+            assistantText += chunk;
+            
+            setMessages((m) => {
+              const copy = m.slice();
+              const lastIdx = copy.length - 1;
+              if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
+                copy[lastIdx] = { role: "assistant", content: assistantText };
+              }
+              return copy;
+            });
+          }
         }
       }
     } catch (err: any) {
@@ -98,34 +82,51 @@ export default function AiChat() {
   }
 
   return (
-    <div className="p-4 border rounded-lg max-w-2xl mx-auto">
-      <div className="space-y-4 mb-4">
-        {messages.map((m, i) => (
-          <div key={i} className="p-2 bg-gray-50 rounded">
-            <strong>{m.role}:</strong> {m.content}
+    <div className="p-6 border rounded-xl max-w-4xl mx-auto bg-card">
+      <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+        {messages.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">
+            <p>👋 Hi! I'm your AI assistant. Ask me anything about file management, conversions, or general questions!</p>
           </div>
-        ))}
+        ) : (
+          messages.map((m, i) => (
+            <div key={i} className={`p-4 rounded-lg ${
+              m.role === "user" 
+                ? "bg-primary text-primary-foreground ml-auto max-w-[80%]" 
+                : "bg-muted max-w-[80%]"
+            }`}>
+              <div className="text-sm font-medium mb-1 opacity-70">
+                {m.role === "user" ? "You" : "AI Assistant"}
+              </div>
+              <div className="whitespace-pre-wrap">{m.content}</div>
+            </div>
+          ))
+        )}
       </div>
 
-      {loading && <div className="text-gray-500">Thinking…</div>}
+      {loading && (
+        <div className="flex items-center gap-2 text-muted-foreground mb-4">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+          <span>AI is thinking...</span>
+        </div>
+      )}
 
       <div className="flex gap-2">
-        <input
+        <Input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           disabled={loading}
-          className="flex-1 p-2 border rounded"
-          placeholder="Ask me anything..."
+          placeholder="Ask me anything about files, conversions, or general questions..."
+          className="flex-1"
         />
-        <button
+        <Button
           onClick={sendMessage}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+          disabled={loading || !input.trim()}
         >
           Send
-        </button>
+        </Button>
       </div>
     </div>
   );
