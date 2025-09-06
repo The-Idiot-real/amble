@@ -138,9 +138,23 @@ const Index = () => {
           ) : (
             <FileGrid
               files={files}
-              onDownload={downloadFile}
-              onPreview={openPreview}
-              ref={searchResultsRef}
+              totalCount={totalCount}
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalCount / ITEMS_PER_PAGE)}
+              searchQuery={searchQuery}
+              isLoading={isLoading}
+              onPageChange={setCurrentPage}
+              onDownload={(fileId: string) => {
+                const file = files.find(f => f.id === fileId);
+                if (file) downloadFile(file);
+              }}
+              onPreview={(fileId: string) => {
+                const file = files.find(f => f.id === fileId);
+                if (file) openPreview(file);
+              }}
+              onShare={(fileId: string) => {
+                console.log("Share file:", fileId);
+              }}
             />
           )}
         </section>
@@ -151,6 +165,9 @@ const Index = () => {
         file={previewFile}
         isOpen={isPreviewOpen}
         onClose={closePreview}
+        onDownload={() => {
+          if (previewFile) downloadFile(previewFile);
+        }}
       />
     </div>
   );

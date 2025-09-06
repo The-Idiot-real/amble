@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant" | "system"; content: string };
 
@@ -22,34 +23,23 @@ export default function AiChat() {
     try {
       console.log("🚀 Sending message to AI...");
       
-      // DIRECT OPENAI API CALL
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
+      // Call Supabase edge function
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: {
           messages: [
             { role: "system", content: "You are a helpful AI assistant. Be concise and friendly." },
             { role: "user", content: text }
-          ],
-          temperature: 0.7,
-        }),
+          ]
+        }
       });
 
-      console.log("📡 Response status:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ API Error:", errorText);
-        setError(`API Error: ${response.status}`);
+      if (error) {
+        console.error("❌ Edge function error:", error);
+        setError(`Error: ${error.message}`);
         return;
       }
 
-      const data = await response.json();
-      console.log("✅ API Response:", data);
+      console.log("✅ Edge function response:", data);
 
       const content = data?.choices?.[0]?.message?.content || "No response from AI";
       
