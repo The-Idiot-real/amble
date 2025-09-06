@@ -41,6 +41,12 @@ export default function AiChat() {
 
       console.log("✅ Edge function response:", data);
 
+      if (data?.error) {
+        console.error("❌ OpenAI API error:", data.error);
+        setError(`OpenAI Error: ${data.error}`);
+        return;
+      }
+
       const content = data?.choices?.[0]?.message?.content || "No response from AI";
       
       // Add AI response

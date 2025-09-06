@@ -6,7 +6,7 @@ type Message = { role: "system" | "user" | "assistant"; content: string };
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
@@ -16,8 +16,11 @@ serve(async (req) => {
   }
 
   try {
+    console.log("AI chat request received:", req.method);
+    
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
+      console.error("Missing OPENAI_API_KEY");
       return new Response("Missing OPENAI_API_KEY", { status: 500, headers: CORS_HEADERS });
     }
 
@@ -56,11 +59,10 @@ serve(async (req) => {
     // Non-streaming (simple, reliable)
     if (!stream) {
       const data = await openaiRes.json();
-      const content =
-        data?.choices?.[0]?.message?.content ??
-        data?.choices?.[0]?.delta?.content ??
-        "";
-      return new Response(JSON.stringify({ content }), {
+      console.log("OpenAI response:", data);
+      
+      // Return the full OpenAI response format for compatibility
+      return new Response(JSON.stringify(data), {
         status: 200,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
