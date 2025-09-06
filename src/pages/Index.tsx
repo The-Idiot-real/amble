@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/Header";
 import { FileGrid } from "@/components/FileGrid";
 import { FilePreview } from "@/components/FilePreview";
-import AiChat from "@/components/AiChat";
+import AIChat from "@/components/AIChat";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Upload, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -111,7 +111,7 @@ const Index = () => {
             </p>
           </div>
           
-          <AiChat />
+          <AIChat />
         </section>
 
         {/* Files Section */}

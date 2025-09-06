@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
-import AiChat from "@/components/AiChat";
+
 import { uploadFile, formatFileSize } from "@/lib/fileService";
 
 interface UploadedFile {
