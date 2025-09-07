@@ -54,30 +54,30 @@ const AIChat = () => {
     setIsLoading(true);
 
     try {
-      console.log('Direct Groq API call...');
-      
+      console.log('Calling Groq API...');
+
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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',
+          'Authorization': 'Bearer YOUR_API_KEY_HERE', // <- replace
         },
         body: JSON.stringify({
-          model: 'llama-3.2-11b-vision-preview',
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful AI assistant for a file management platform called Amble. You can analyze images and files. Be concise and friendly.'
+              content: 'You are a helpful AI assistant for a file management platform called Amble. You can analyze images, PDFs, and documents. Be concise and friendly.'
             },
             {
               role: 'user',
               content: [
                 ...(userMessage.content ? [{ type: 'text', text: userMessage.content }] : []),
-                ...(fileBase64 ? [{ 
-                  type: 'image_url', 
-                  image_url: { url: fileBase64 } 
+                ...(fileBase64 ? [{
+                  type: 'image_url',
+                  image_url: { url: fileBase64 }
                 }] : [])
-              ].filter(Boolean)
+              ]
             }
           ],
           max_tokens: 1000,
@@ -186,9 +186,9 @@ const AIChat = () => {
                 >
                   {message.fileUrl && (
                     <div className="mb-2">
-                      <img 
-                        src={message.fileUrl} 
-                        alt={message.fileName} 
+                      <img
+                        src={message.fileUrl}
+                        alt={message.fileName}
                         className="max-w-full h-auto rounded-lg mb-2"
                         style={{ maxHeight: '200px' }}
                       />
