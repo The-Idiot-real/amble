@@ -1,74 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
+// Simple AI chat service for direct OpenAI API calls
+export const chatWithAI = async (message: string): Promise<string> => {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('OpenAI API key not found. Please add VITE_OPENAI_API_KEY to your .env file.');
+  }
 
-export async function POST(request: NextRequest) {
   try {
-    const { messages, stream } = await request.json();
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: "Invalid messages" }, { status: 400 });
-    }
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages,
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful AI assistant for a file management platform called Amble. Be concise and friendly.'
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        max_tokens: 500,
         temperature: 0.7,
-        stream: !!stream,
       }),
     });
 
     if (!response.ok) {
-      const text = await response.text();
-      return new NextResponse(text, { status: response.status });
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
-    if (!stream) {
-      const data = await response.json();
-      return NextResponse.json(data);
-    }
-
-    // STREAMING
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const reader = response.body!.getReader();
-    const decoder = new TextDecoder();
-
-    (async () => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          chunk.split("\n").forEach((line) => {
-            if (line.trim().startsWith("data: ")) {
-              const data = line.slice(6).trim();
-              writer.write(`data: ${data}\n\n`);
-            }
-          });
-        }
-        writer.write("data: [DONE]\n\n");
-      } catch (error) {
-        console.error('Streaming error:', error);
-      } finally {
-        writer.close();
-      }
-    })();
-
-    return new NextResponse(stream.readable, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache, no-transform",
-        "Connection": "keep-alive",
-      },
-    });
-  } catch (err: any) {
-    console.error(err);
-    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || 'No response available';
+    
+  } catch (error) {
+    console.error('AI chat error:', error);
+    throw error;
   }
-}
+};

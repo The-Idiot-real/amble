@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { chatWithAI } from '../../api/chat';
 
 interface Message {
   id: string;
@@ -35,26 +35,14 @@ const AIChat = () => {
     setIsLoading(true);
 
     try {
-      console.log('Sending message to chat function...');
+      console.log('Sending message to AI...');
       
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message: userMessage.content }
-      });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to send message');
-      }
-
-      if (data?.error) {
-        console.error('AI function returned error:', data.error);
-        throw new Error(data.error);
-      }
+      const aiResponse = await chatWithAI(userMessage.content);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.message || 'No response received',
+        content: aiResponse,
         timestamp: new Date(),
       };
 
