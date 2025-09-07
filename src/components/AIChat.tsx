@@ -34,16 +34,16 @@ const AIChat = () => {
     setIsLoading(true);
 
     try {
-      console.log('Direct OpenAI API call...');
+      console.log('Direct Groq API call...');
       
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+          'Authorization': 'Bearer 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',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'llama-3.1-8b-instant',
           messages: [
             {
               role: 'system',
@@ -61,7 +61,7 @@ const AIChat = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
