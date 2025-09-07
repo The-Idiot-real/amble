@@ -60,10 +60,10 @@ const AIChat = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_KEY_HERE', // <- replace
+          'Authorization': 'Bearer YOUR_API_KEY_HERE', // <- replace with your real key
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct', // ✅ updated model only
           messages: [
             {
               role: 'system',
