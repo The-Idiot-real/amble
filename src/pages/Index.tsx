@@ -4,15 +4,21 @@ import { FilePreview } from '@/components/FilePreview';
 import { Header } from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
 import { getLocalFilesPaginated, downloadLocalFile, LocalFileData } from '@/lib/localFileStorage';
+import { 
+  localFileDataArrayToFileDataArray, 
+  localFileDataToStoredFile 
+} from '@/lib/typeAdapters';
 import FloatingAIChat from '@/components/FloatingAIChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
+  // Properly type the files state as LocalFileData[]
   const [files, setFiles] = useState<LocalFileData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  // Properly type the previewFile state as LocalFileData | null
   const [previewFile, setPreviewFile] = useState<LocalFileData | null>(null);
   const searchResultsRef = useRef(null);
   const { toast } = useToast();
@@ -26,11 +32,11 @@ const Index = () => {
   const loadFiles = async () => {
     try {
       setIsLoading(true);
-      const { 
-        files: fetchedFiles, 
-        totalCount: count 
+      const {
+        files: fetchedFiles,
+        totalCount: count
       } = getLocalFilesPaginated(currentPage, ITEMS_PER_PAGE, searchQuery);
-      
+      // Set files as LocalFileData[] (no conversion needed here)
       setFiles(fetchedFiles);
       setTotalCount(count);
     } catch (error) {
@@ -48,7 +54,6 @@ const Index = () => {
   const downloadFile = async (file: LocalFileData) => {
     try {
       downloadLocalFile(file.id);
-
       toast({
         title: "Download Started",
         description: `Downloading ${file.name}`,
@@ -72,77 +77,80 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <Header 
-        onSearch={setSearchQuery}
-        searchResults={files}
-        onDownload={(fileId) => {
-          const file = files.find(f => f.id === fileId);
-          if (file) downloadFile(file);
-        }}
-        onPreview={(fileId) => {
-          const file = files.find(f => f.id === fileId);
-          if (file) openPreview(file);
-        }}
-        onShare={() => {}}
-      />
+    <div className="min-h-screen bg-background">
+      <Header />
       
-      <main className={`container mx-auto px-4 py-8 ${isMobile ? 'px-2' : 'px-6 py-12'}`}>
+      <main className="container mx-auto px-4 py-8">
+        {/* Convert LocalFileData[] to FileData[] for FileGrid component */}
+        <FileGrid 
+          files={localFileDataArrayToFileDataArray(files)}
+          isLoading={isLoading}
+          totalCount={totalCount}
+          currentPage={currentPage}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          onDownload={(fileId: string) => {
+            // Find the file by ID and call downloadFile with LocalFileData
+            const file = files.find(f => f.id === fileId);
+            if (file) downloadFile(file);
+          }}
+          onPreview={(fileId: string) => {
+            // Find the file by ID and call openPreview with LocalFileData
+            const file = files.find(f => f.id === fileId);
+            if (file) openPreview(file);
+          }}
+          onShare={() => {}}
+        />
+
         {/* Hero Section */}
-        <section className={`text-center ${isMobile ? 'mb-8' : 'mb-16'}`}>
-          <div className="max-w-4xl mx-auto">
-            <h1 className={`font-bold mb-6 ${isMobile ? 'text-3xl' : 'text-5xl md:text-6xl'}`}>
-              <span className="gradient-text">Welcome to Amble</span>
-            </h1>
-            <p className={`text-muted-foreground mb-8 leading-relaxed ${isMobile ? 'text-lg mb-6' : 'text-xl md:text-2xl mb-8'}`}>
-              Your intelligent file sharing platform with AI assistance. Upload, organize, and chat with your files.
-            </p>
-            <div className={`flex gap-4 justify-center ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'}`}>
-              <a 
-                href="/upload" 
-                className={`inline-flex items-center justify-center font-semibold text-white rounded-xl transition-all duration-200 bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent hover:scale-105 neon-glow ${isMobile ? 'px-6 py-3 text-base' : 'px-8 py-4 text-lg'}`}
-              >
-                Start Uploading
-              </a>
-              <a 
-                href="/convert" 
-                className={`inline-flex items-center justify-center font-semibold border-2 border-primary text-primary rounded-xl transition-all duration-200 hover:bg-primary hover:text-white hover:scale-105 ${isMobile ? 'px-6 py-3 text-base' : 'px-8 py-4 text-lg'}`}
-              >
-                Convert Files
-              </a>
-            </div>
+        <div className="text-center py-12">
+          <h1 className="text-4xl font-bold mb-4">Welcome to Amble</h1>
+          <p className="text-xl text-muted-foreground mb-8">
+            Your intelligent file sharing platform with AI assistance. Upload, organize, and chat with your files.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <a href="/upload" className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90">
+              Start Uploading
+            </a>
+            <a href="/convert" className="bg-secondary text-secondary-foreground px-6 py-3 rounded-lg hover:bg-secondary/90">
+              Convert Files
+            </a>
           </div>
-        </section>
+        </div>
 
         {/* Files Section */}
-        <section ref={searchResultsRef}>
-          {isLoading ? (
-            <div className={`text-center ${isMobile ? 'py-8' : 'py-12'}`}>
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className={`mt-4 text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>Loading your files...</p>
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4">Loading your files...</p>
+          </div>
+        ) : (
+          <div>
+            {/* Search input */}
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search files..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full max-w-md mx-auto block px-4 py-2 border rounded-lg"
+              />
             </div>
-          ) : (
-            <FileGrid
-              files={files}
-              currentPage={currentPage}
-              totalPages={Math.ceil(totalCount / ITEMS_PER_PAGE)}
-              onPageChange={setCurrentPage}
-              onDownload={downloadFile}
-              onPreview={openPreview}
-              onShare={() => {}}
-              searchQuery={searchQuery}
-            />
-          )}
-        </section>
-      </main>
+            
+            {/* FileGrid is already rendered above */}
+          </div>
+        )}
 
-      {previewFile && (
-        <FilePreview 
-          file={previewFile} 
-          onClose={closePreview}
-          onDownload={() => downloadFile(previewFile)}
-        />
-      )}
+        {/* Convert LocalFileData to StoredFile for FilePreview component */}
+        {previewFile && (
+          <FilePreview
+            file={localFileDataToStoredFile(previewFile)}
+            isOpen={!!previewFile}
+            onClose={closePreview}
+            onDownload={() => previewFile && downloadFile(previewFile)}
+          />
+        )}
+      </main>
 
       <FloatingAIChat />
     </div>
