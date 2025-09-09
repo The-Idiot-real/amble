@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { FileGrid } from '@/components/FileGrid';
+import { ModernFileGrid } from '@/components/ModernFileGrid';
 import { FilePreview } from '@/components/FilePreview';
-import { Header } from '@/components/Header';
+import { ModernHeader } from '@/components/ModernHeader';
 import { useToast } from '@/hooks/use-toast';
 import { getLocalFilesPaginated, downloadLocalFile, LocalFileData, formatFileSize } from '@/lib/localFileStorage';
 import FloatingAIChat from '@/components/FloatingAIChat';
@@ -102,7 +102,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <Header 
+      <ModernHeader 
         onSearch={setSearchQuery}
         searchResults={files.map(convertToFileData)}
         onDownload={downloadFile}
@@ -145,7 +145,7 @@ const Index = () => {
               <p className={`mt-4 text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>Loading your files...</p>
             </div>
           ) : (
-            <FileGrid
+            <ModernFileGrid
               files={files.map(convertToFileData)}
               totalCount={totalCount}
               currentPage={currentPage}
