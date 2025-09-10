@@ -6,9 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
 import { Badge } from "@/components/ui/badge";
-import { convertFile, downloadConvertedFile, formatFileSize } from "@/lib/localFileConverter";
-import { useIsMobile } from "@/hooks/use-mobile";
-import FloatingAIChat from "@/components/FloatingAIChat";
+import { convertFile, downloadConvertedFile, formatFileSize } from "@/lib/fileStorage";
 
 interface ConversionJob {
   id: string;
@@ -26,7 +24,6 @@ const Convert = () => {
   const [conversions, setConversions] = useState<ConversionJob[]>([]);
   const [selectedFormat, setSelectedFormat] = useState<string>("");
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   const formatOptions = [
     { value: "pdf", label: "PDF", category: "Document" },
@@ -204,14 +201,14 @@ const Convert = () => {
     <div className="min-h-screen">
       <Header />
       
-      <main className={`container mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'}`}>
+      <main className="container mx-auto px-6 py-12">
         <div className="max-w-6xl mx-auto">
-          <div className={`text-center ${isMobile ? 'mb-8' : 'mb-12'}`}>
-            <h1 className={`font-bold mb-4 ${isMobile ? 'text-3xl' : 'text-4xl'}`}>
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold mb-4">
               <span className="gradient-text">File Converter</span>
             </h1>
-            <p className={`text-muted-foreground ${isMobile ? 'text-lg' : 'text-xl'}`}>
-              Convert your files between different formats quickly and securely using local processing.
+            <p className="text-xl text-muted-foreground">
+              Convert your files between different formats quickly and securely.
             </p>
           </div>
 
@@ -387,8 +384,6 @@ const Convert = () => {
           </div>
         </div>
       </main>
-
-      <FloatingAIChat />
     </div>
   );
 };

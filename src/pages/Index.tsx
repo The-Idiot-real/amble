@@ -1,59 +1,37 @@
-import { useState, useEffect, useRef } from 'react';
-import { ModernFileGrid } from '@/components/ModernFileGrid';
-import { FilePreview } from '@/components/FilePreview';
-import { ModernHeader } from '@/components/ModernHeader';
-import { useToast } from '@/hooks/use-toast';
-import { getLocalFilesPaginated, downloadLocalFile, LocalFileData, formatFileSize } from '@/lib/localFileStorage';
-import FloatingAIChat from '@/components/FloatingAIChat';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { FileData } from '@/components/FileCard';
-import { StoredFile } from '@/lib/fileStorage';
-
-// Adapter functions to convert between interfaces
-const convertToFileData = (localFile: LocalFileData): FileData => ({
-  id: localFile.id,
-  name: localFile.name,
-  size: formatFileSize(localFile.fileSize),
-  type: localFile.fileType,
-  uploadDate: new Date(localFile.uploadDate).toLocaleDateString(),
-  downloadCount: localFile.downloadCount,
-  thumbnail: localFile.fileType.startsWith('image/') ? localFile.data : undefined
-});
-
-const convertToStoredFile = (localFile: LocalFileData): StoredFile => ({
-  id: localFile.id,
-  name: localFile.name,
-  size: localFile.fileSize,
-  type: localFile.fileType,
-  data: localFile.data,
-  uploadDate: new Date(localFile.uploadDate),
-  downloadCount: localFile.downloadCount
-});
+import { useState, useEffect, useRef } from "react";
+import { Header } from "@/components/Header";
+import { FileGrid } from "@/components/FileGrid";
+import { FilePreview } from "@/components/FilePreview";
+import AIChat from "@/components/AIChat";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Upload, RefreshCw } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { getFiles, downloadFile as downloadFileService, FileData } from "@/lib/fileService";
 
 const Index = () => {
-  const [files, setFiles] = useState<LocalFileData[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [files, setFiles] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [previewFile, setPreviewFile] = useState<StoredFile | null>(null);
-  const searchResultsRef = useRef(null);
+  const [previewFile, setPreviewFile] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const searchResultsRef = useRef(null);
   const ITEMS_PER_PAGE = 9;
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadFiles();
   }, [currentPage, searchQuery]);
 
   const loadFiles = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const { 
-        files: fetchedFiles, 
-        totalCount: count 
-      } = getLocalFilesPaginated(currentPage, ITEMS_PER_PAGE, searchQuery);
-      
+      const {
+        files: fetchedFiles,
+        totalCount: count
+      } = await getFiles(currentPage, ITEMS_PER_PAGE, searchQuery);
       setFiles(fetchedFiles);
       setTotalCount(count);
     } catch (error) {
@@ -61,115 +39,136 @@ const Index = () => {
       toast({
         title: "Error",
         description: "Failed to load files. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const downloadFile = async (fileId: string) => {
+  const downloadFile = async (file: FileData) => {
     try {
-      const file = files.find(f => f.id === fileId);
-      if (!file) return;
-
-      downloadLocalFile(file.id);
-
+      await downloadFileService(file.id);
       toast({
-        title: "Download Started",
-        description: `Downloading ${file.name}`,
+        title: "Success",
+        description: "File downloaded successfully",
       });
     } catch (error) {
-      console.error('Download error:', error);
       toast({
-        title: "Download Failed",
-        description: "Failed to download file. Please try again.",
-        variant: "destructive",
+        title: "Error",
+        description: "Failed to download file",
+        variant: "destructive"
       });
     }
   };
 
-  const openPreview = (fileId: string) => {
-    const file = files.find(f => f.id === fileId);
-    if (file) {
-      setPreviewFile(convertToStoredFile(file));
-    }
+  const openPreview = (file: FileData) => {
+    setPreviewFile(file);
+    setIsPreviewOpen(true);
   };
 
   const closePreview = () => {
+    setIsPreviewOpen(false);
     setPreviewFile(null);
   };
 
   return (
-    <div className="min-h-screen">
-      <ModernHeader 
-        onSearch={setSearchQuery}
-        searchResults={files.map(convertToFileData)}
-        onDownload={downloadFile}
-        onPreview={openPreview}
-        onShare={() => {}}
-      />
+    <div className="min-h-screen bg-background">
+      <Header />
       
-      <main className={`container mx-auto px-4 py-8 ${isMobile ? 'px-2' : 'px-6 py-12'}`}>
+      <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <section className={`text-center ${isMobile ? 'mb-8' : 'mb-16'}`}>
-          <div className="max-w-4xl mx-auto">
-            <h1 className={`font-bold mb-6 ${isMobile ? 'text-3xl' : 'text-5xl md:text-6xl'}`}>
-              <span className="gradient-text">Welcome to Amble</span>
-            </h1>
-            <p className={`text-muted-foreground mb-8 leading-relaxed ${isMobile ? 'text-lg mb-6' : 'text-xl md:text-2xl mb-8'}`}>
-              Your intelligent file sharing platform with AI assistance. Upload, organize, and chat with your files.
-            </p>
-            <div className={`flex gap-4 justify-center ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'}`}>
-              <a 
-                href="/upload" 
-                className={`inline-flex items-center justify-center font-semibold text-white rounded-xl transition-all duration-200 bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent hover:scale-105 neon-glow ${isMobile ? 'px-6 py-3 text-base' : 'px-8 py-4 text-lg'}`}
-              >
-                Start Uploading
-              </a>
-              <a 
-                href="/convert" 
-                className={`inline-flex items-center justify-center font-semibold border-2 border-primary text-primary rounded-xl transition-all duration-200 hover:bg-primary hover:text-white hover:scale-105 ${isMobile ? 'px-6 py-3 text-base' : 'px-8 py-4 text-lg'}`}
-              >
+        <section className="text-center mb-12">
+          <h1 className="text-4xl font-bold tracking-tight mb-4">
+            Welcome to Amble
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Your intelligent file management and AI assistant platform
+          </p>
+          
+          <div className="flex justify-center gap-4">
+            <Button asChild size="lg">
+              <Link to="/upload">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Files
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/convert">
+                <ArrowRight className="mr-2 h-4 w-4" />
                 Convert Files
-              </a>
-            </div>
+              </Link>
+            </Button>
           </div>
         </section>
 
+        {/* AI Chat Section */}
+        <section className="mb-12">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-semibold mb-2">AI Assistant</h2>
+            <p className="text-muted-foreground">
+              Chat with our AI assistant to help you with your files and questions
+            </p>
+          </div>
+          
+          <AIChat />
+        </section>
+
         {/* Files Section */}
-        <section ref={searchResultsRef}>
+        <section>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Your Files</h2>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadFiles}
+                disabled={isLoading}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
           {isLoading ? (
-            <div className={`text-center ${isMobile ? 'py-8' : 'py-12'}`}>
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className={`mt-4 text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>Loading your files...</p>
+            <div className="text-center py-12">
+              <p>Loading files...</p>
             </div>
           ) : (
-            <ModernFileGrid
-              files={files.map(convertToFileData)}
+            <FileGrid
+              files={files}
               totalCount={totalCount}
               currentPage={currentPage}
               totalPages={Math.ceil(totalCount / ITEMS_PER_PAGE)}
-              onPageChange={setCurrentPage}
-              onDownload={downloadFile}
-              onPreview={openPreview}
-              onShare={() => {}}
               searchQuery={searchQuery}
+              isLoading={isLoading}
+              onPageChange={setCurrentPage}
+              onDownload={(fileId: string) => {
+                const file = files.find(f => f.id === fileId);
+                if (file) downloadFile(file);
+              }}
+              onPreview={(fileId: string) => {
+                const file = files.find(f => f.id === fileId);
+                if (file) openPreview(file);
+              }}
+              onShare={(fileId: string) => {
+                console.log("Share file:", fileId);
+              }}
             />
           )}
         </section>
       </main>
 
-      {previewFile && (
-        <FilePreview 
-          file={previewFile} 
-          isOpen={!!previewFile}
-          onClose={closePreview}
-          onDownload={() => downloadFile(previewFile.id)}
-        />
-      )}
-
-      <FloatingAIChat />
+      {/* File Preview Modal */}
+      <FilePreview
+        file={previewFile}
+        isOpen={isPreviewOpen}
+        onClose={closePreview}
+        onDownload={() => {
+          if (previewFile) downloadFile(previewFile);
+        }}
+      />
     </div>
   );
 };
