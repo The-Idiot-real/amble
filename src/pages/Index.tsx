@@ -1,34 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { ModernFileGrid } from '@/components/ModernFileGrid';
+import { FileGrid } from '@/components/FileGrid';
 import { FilePreview } from '@/components/FilePreview';
-import { ModernHeader } from '@/components/ModernHeader';
+import { Header } from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
-import { getLocalFilesPaginated, downloadLocalFile, LocalFileData, formatFileSize } from '@/lib/localFileStorage';
+import { getLocalFilesPaginated, downloadLocalFile, LocalFileData } from '@/lib/localFileStorage';
 import FloatingAIChat from '@/components/FloatingAIChat';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { FileData } from '@/components/FileCard';
-import { StoredFile } from '@/lib/fileStorage';
-
-// Adapter functions to convert between interfaces
-const convertToFileData = (localFile: LocalFileData): FileData => ({
-  id: localFile.id,
-  name: localFile.name,
-  size: formatFileSize(localFile.fileSize),
-  type: localFile.fileType,
-  uploadDate: new Date(localFile.uploadDate).toLocaleDateString(),
-  downloadCount: localFile.downloadCount,
-  thumbnail: localFile.fileType.startsWith('image/') ? localFile.data : undefined
-});
-
-const convertToStoredFile = (localFile: LocalFileData): StoredFile => ({
-  id: localFile.id,
-  name: localFile.name,
-  size: localFile.fileSize,
-  type: localFile.fileType,
-  data: localFile.data,
-  uploadDate: new Date(localFile.uploadDate),
-  downloadCount: localFile.downloadCount
-});
 
 const Index = () => {
   const [files, setFiles] = useState<LocalFileData[]>([]);
@@ -36,7 +13,7 @@ const Index = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [previewFile, setPreviewFile] = useState<StoredFile | null>(null);
+  const [previewFile, setPreviewFile] = useState<LocalFileData | null>(null);
   const searchResultsRef = useRef(null);
   const { toast } = useToast();
   const ITEMS_PER_PAGE = 9;
@@ -68,11 +45,8 @@ const Index = () => {
     }
   };
 
-  const downloadFile = async (fileId: string) => {
+  const downloadFile = async (file: LocalFileData) => {
     try {
-      const file = files.find(f => f.id === fileId);
-      if (!file) return;
-
       downloadLocalFile(file.id);
 
       toast({
@@ -89,11 +63,8 @@ const Index = () => {
     }
   };
 
-  const openPreview = (fileId: string) => {
-    const file = files.find(f => f.id === fileId);
-    if (file) {
-      setPreviewFile(convertToStoredFile(file));
-    }
+  const openPreview = (file: LocalFileData) => {
+    setPreviewFile(file);
   };
 
   const closePreview = () => {
@@ -102,11 +73,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <ModernHeader 
+      <Header 
         onSearch={setSearchQuery}
-        searchResults={files.map(convertToFileData)}
-        onDownload={downloadFile}
-        onPreview={openPreview}
+        searchResults={files}
+        onDownload={(fileId) => {
+          const file = files.find(f => f.id === fileId);
+          if (file) downloadFile(file);
+        }}
+        onPreview={(fileId) => {
+          const file = files.find(f => f.id === fileId);
+          if (file) openPreview(file);
+        }}
         onShare={() => {}}
       />
       
@@ -145,9 +122,8 @@ const Index = () => {
               <p className={`mt-4 text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>Loading your files...</p>
             </div>
           ) : (
-            <ModernFileGrid
-              files={files.map(convertToFileData)}
-              totalCount={totalCount}
+            <FileGrid
+              files={files}
               currentPage={currentPage}
               totalPages={Math.ceil(totalCount / ITEMS_PER_PAGE)}
               onPageChange={setCurrentPage}
@@ -163,9 +139,8 @@ const Index = () => {
       {previewFile && (
         <FilePreview 
           file={previewFile} 
-          isOpen={!!previewFile}
           onClose={closePreview}
-          onDownload={() => downloadFile(previewFile.id)}
+          onDownload={() => downloadFile(previewFile)}
         />
       )}
 

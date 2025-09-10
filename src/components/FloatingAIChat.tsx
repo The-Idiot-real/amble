@@ -75,7 +75,7 @@ const FloatingAIChat = () => {
       });
 
       let requestBody: any = {
-        model: 'openai/gpt-oss-120b', // Latest GPT OSS model
+        model: 'llama-3.2-90b-vision-preview', // Best Groq model
         messages: [
           {
             role: 'system',

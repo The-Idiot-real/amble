@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { ModernHeader } from "@/components/ModernHeader";
+import { Header } from "@/components/Header";
 
 import { uploadFileLocally, formatFileSize } from "@/lib/localFileStorage";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -155,7 +155,7 @@ const Upload = () => {
 
   return (
     <div className="min-h-screen">
-      <ModernHeader 
+      <Header 
         onSearch={() => {}}
         searchResults={[]}
         onDownload={() => {}}
