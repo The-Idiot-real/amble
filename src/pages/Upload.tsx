@@ -6,9 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Header } from "@/components/Header";
+import { ModernHeader } from "@/components/ModernHeader";
 
-import { uploadFile, formatFileSize } from "@/lib/fileService";
+import { uploadFileLocally, formatFileSize } from "@/lib/localFileStorage";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "@/components/ui/badge";
+import FloatingAIChat from "@/components/FloatingAIChat";
 
 interface UploadedFile {
   name: string;
@@ -36,6 +39,7 @@ const Upload = () => {
     tags: ''
   });
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -64,60 +68,84 @@ const Upload = () => {
       progress: 0,
       status: 'uploading' as const,
       file: file,
-      customName: file.name // Add custom name field
+      customName: '' // Start with empty custom name for user input
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
+  };
 
-    // Process each file with form data
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i];
-      
-      try {
-        const currentFile = files.find(f => f.file === file);
-        const uploadName = currentFile?.customName || file.name;
-        
-        await uploadFile({
-          file: file,
-          name: uploadName,
-          topic: formData.topic || undefined,
-          description: formData.description || undefined,
-          tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined
-        });
+  const uploadFile = async (fileData: UploadedFile) => {
+    if (!fileData.customName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter a name for the file before uploading.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-        // Update status to completed
+    try {
+      // Simulate upload progress
+      const uploadInterval = setInterval(() => {
         setFiles(currentFiles => {
           const updatedFiles = [...currentFiles];
-          const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
-          if (fileIndex !== -1) {
-            updatedFiles[fileIndex].status = 'completed';
-            updatedFiles[fileIndex].progress = 100;
+          const fileIndex = updatedFiles.findIndex(f => f.file === fileData.file);
+          if (fileIndex !== -1 && updatedFiles[fileIndex].status === 'uploading') {
+            updatedFiles[fileIndex].progress += Math.random() * 20;
+            if (updatedFiles[fileIndex].progress >= 100) {
+              updatedFiles[fileIndex].progress = 100;
+              clearInterval(uploadInterval);
+            }
           }
           return updatedFiles;
         });
+      }, 200);
 
-        toast({
-          title: "Upload Complete",
-          description: `${file.name} has been uploaded successfully.`,
-        });
+      // Parse tags from input (supports #tag format)
+      const parsedTags = formData.tags 
+        ? formData.tags.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(Boolean)
+        : [];
 
-      } catch (error) {
-        console.error('Upload error:', error);
-        setFiles(currentFiles => {
-          const updatedFiles = [...currentFiles];
-          const fileIndex = updatedFiles.findIndex(f => f.name === file.name && f.status === 'uploading');
-          if (fileIndex !== -1) {
-            updatedFiles[fileIndex].status = 'error';
-          }
-          return updatedFiles;
-        });
+      await uploadFileLocally({
+        file: fileData.file,
+        name: fileData.customName,
+        topic: formData.topic || undefined,
+        description: formData.description || undefined,
+        tags: parsedTags.length > 0 ? parsedTags : undefined
+      });
 
-        toast({
-          title: "Upload Failed",
-          description: `Failed to upload ${file.name}. Please try again.`,
-          variant: "destructive",
-        });
-      }
+      // Update status to completed
+      setFiles(currentFiles => {
+        const updatedFiles = [...currentFiles];
+        const fileIndex = updatedFiles.findIndex(f => f.file === fileData.file);
+        if (fileIndex !== -1) {
+          updatedFiles[fileIndex].status = 'completed';
+          updatedFiles[fileIndex].progress = 100;
+        }
+        return updatedFiles;
+      });
+
+      toast({
+        title: "Upload Complete",
+        description: `${fileData.customName} has been uploaded successfully.`,
+      });
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      setFiles(currentFiles => {
+        const updatedFiles = [...currentFiles];
+        const fileIndex = updatedFiles.findIndex(f => f.file === fileData.file);
+        if (fileIndex !== -1) {
+          updatedFiles[fileIndex].status = 'error';
+        }
+        return updatedFiles;
+      });
+
+      toast({
+        title: "Upload Failed",
+        description: `Failed to upload ${fileData.customName}. Please try again.`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -127,7 +155,7 @@ const Upload = () => {
 
   return (
     <div className="min-h-screen">
-      <Header 
+      <ModernHeader 
         onSearch={() => {}}
         searchResults={[]}
         onDownload={() => {}}
@@ -135,33 +163,76 @@ const Upload = () => {
         onShare={() => {}}
       />
       
-      <main className="container mx-auto px-6 py-12">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">
+      <main className={`container mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'}`}>
+        <div className="max-w-6xl mx-auto">
+          <div className={`text-center ${isMobile ? 'mb-8' : 'mb-12'}`}>
+            <h1 className={`font-bold mb-4 ${isMobile ? 'text-3xl' : 'text-4xl'}`}>
               <span className="gradient-text">Upload Your Files</span>
             </h1>
-            <p className="text-xl text-muted-foreground">
-              Share and convert your files with the world. Drag and drop or click to upload.
+            <p className={`text-muted-foreground ${isMobile ? 'text-lg' : 'text-xl'}`}>
+              Share and convert your files with the world. Name your files and add tags for better organization.
             </p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div className={`space-y-8 ${isMobile ? '' : 'grid gap-8 lg:grid-cols-3'}`}>
+            {/* File Metadata Form */}
+            <div className="space-y-6">
+              <div className="file-card">
+                <h3 className={`font-semibold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`}>File Information</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="topic">Topic</Label>
+                    <Input
+                      id="topic"
+                      value={formData.topic}
+                      onChange={(e) => setFormData(prev => ({ ...prev, topic: e.target.value }))}
+                      placeholder="e.g., Work, Personal, Study"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Brief description of your files..."
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="tags">Tags</Label>
+                    <Input
+                      id="tags"
+                      value={formData.tags}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                      placeholder="study, work, important (or #study, #work)"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Separate with commas. Use # for hashtags (e.g., #study, #work)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Upload Zone */}
             <div className="space-y-6">
               <div
-                className={`upload-zone p-12 text-center cursor-pointer transition-all ${
+                className={`upload-zone cursor-pointer transition-all ${
                   dragActive ? 'border-primary scale-105' : ''
-                }`}
+                } ${isMobile ? 'p-8' : 'p-12'} text-center`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
                 onClick={() => document.getElementById('fileInput')?.click()}
               >
-                <UploadIcon className="w-16 h-16 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Drop files here</h3>
-                <p className="text-muted-foreground mb-4">
+                <UploadIcon className={`text-primary mx-auto mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`} />
+                <h3 className={`font-semibold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`}>Drop files here</h3>
+                <p className={`text-muted-foreground mb-4 ${isMobile ? 'text-sm' : ''}`}>
                   or click to browse from your computer
                 </p>
                 <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent">
@@ -176,36 +247,37 @@ const Upload = () => {
                 />
               </div>
 
-              <div className="text-sm text-muted-foreground">
+              <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 <p>Maximum file size: 100MB</p>
                 <p>Supported formats: All file types</p>
+                <p>Files are stored locally in your browser</p>
               </div>
             </div>
 
             {/* Upload Progress */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Upload Progress</h3>
+              <h3 className={`font-semibold ${isMobile ? 'text-lg' : 'text-xl'}`}>Files to Upload</h3>
               
               {files.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <File className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No files selected yet</p>
+                <div className={`text-center text-muted-foreground ${isMobile ? 'py-8' : 'py-12'}`}>
+                  <File className={`mx-auto mb-4 opacity-50 ${isMobile ? 'w-8 h-8' : 'w-12 h-12'}`} />
+                  <p className={isMobile ? 'text-sm' : ''}>No files selected yet</p>
                 </div>
               ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className={`space-y-3 overflow-y-auto ${isMobile ? 'max-h-64' : 'max-h-96'}`}>
                   {files.map((file, index) => (
                     <div key={index} className="file-card p-4">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                          <div className={`bg-muted rounded-lg flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}>
                             {file.status === 'completed' ? (
-                              <CheckCircle className="w-4 h-4 text-primary" />
+                              <CheckCircle className={`text-primary ${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                             ) : (
-                              <File className="w-4 h-4 text-muted-foreground" />
+                              <File className={`text-muted-foreground ${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            {file.status === 'uploading' ? (
+                            <div className="space-y-2">
                               <Input
                                 value={file.customName}
                                 onChange={(e) => {
@@ -218,36 +290,61 @@ const Upload = () => {
                                     return updatedFiles;
                                   });
                                 }}
-                                className="text-sm font-medium h-6 border-none p-0 shadow-none"
-                                placeholder="Enter filename..."
+                                className={`font-medium ${isMobile ? 'text-sm h-8' : 'text-sm'}`}
+                                placeholder="Enter file name..."
+                                disabled={file.status === 'completed'}
                               />
-                            ) : (
-                              <p className="text-sm font-medium truncate">{file.customName}</p>
-                            )}
-                            <p className="text-xs text-muted-foreground">{file.size}</p>
+                              <div className="flex items-center gap-2">
+                                <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                                  Original: {file.name} ({file.size})
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeFile(index)}
-                          className="w-6 h-6"
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {file.status === 'uploading' && file.customName.trim() && (
+                            <Button
+                              size="sm"
+                              onClick={() => uploadFile(file)}
+                              className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent"
+                            >
+                              Upload
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeFile(index)}
+                            className={isMobile ? 'w-6 h-6' : 'w-6 h-6'}
+                          >
+                            <X className={isMobile ? 'w-2 h-2' : 'w-3 h-3'} />
+                          </Button>
+                        </div>
                       </div>
                       
-                      {file.status === 'uploading' && (
+                      {file.status === 'uploading' && file.progress > 0 && (
                         <div className="space-y-1">
                           <Progress value={file.progress} className="h-2" />
-                          <p className="text-xs text-muted-foreground">
+                          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
                             {Math.round(file.progress)}% uploaded
                           </p>
                         </div>
                       )}
                       
                       {file.status === 'completed' && (
-                        <p className="text-xs text-primary font-medium">Upload complete!</p>
+                        <div className="flex items-center gap-2">
+                          <p className={`text-primary font-medium ${isMobile ? 'text-xs' : 'text-xs'}`}>Upload complete!</p>
+                          {formData.tags && (
+                            <div className="flex gap-1 flex-wrap">
+                              {formData.tags.split(',').map((tag, tagIndex) => (
+                                <Badge key={tagIndex} variant="secondary" className="text-xs">
+                                  #{tag.trim().replace(/^#/, '')}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
@@ -257,6 +354,8 @@ const Upload = () => {
           </div>
         </div>
       </main>
+
+      <FloatingAIChat />
     </div>
   );
 };
