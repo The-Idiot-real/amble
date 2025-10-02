@@ -1,6 +1,5 @@
-import { FileCard } from '@/components/FileCard';
+import { FileCard, FileData } from '@/components/FileCard';
 import { Pagination } from '@/components/Pagination';
-import { FileData } from '@/lib/fileService';
 import { Sparkles, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -30,23 +29,6 @@ export const FileGrid = ({
   onPreview,
   onShare
 }: FileGridProps) => {
-  const formatFileData = (file: FileData) => ({
-    id: file.id,
-    name: file.name,
-    size: formatFileSize(file.file_size),
-    type: file.file_type,
-    uploadDate: new Date(file.upload_date).toLocaleDateString(),
-    downloadCount: file.download_count
-  });
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -81,7 +63,7 @@ export const FileGrid = ({
           files.map((file) => (
             <FileCard
               key={file.id}
-              file={formatFileData(file)}
+              file={file}
               onDownload={onDownload}
               onPreview={onPreview}
               onShare={onShare}
