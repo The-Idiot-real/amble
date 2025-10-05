@@ -109,9 +109,9 @@ export const ModernFileGrid = ({
           const iconColor = getFileTypeColor(file.type);
           
           return (
-            <div key={file.id} className="modern-card group">
+            <div key={file.id} className="modern-card group bounce-in-animation">
               {/* File preview/icon */}
-              <div className="aspect-video rounded-xl bg-muted/20 mb-4 relative overflow-hidden">
+              <div className="aspect-video rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 mb-4 relative overflow-hidden pulse-glow-animation">
                 {file.thumbnail ? (
                   <img 
                     src={file.thumbnail} 
@@ -125,20 +125,18 @@ export const ModernFileGrid = ({
                 )}
                 
                 {/* Hover actions */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-accent/80 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3 backdrop-blur-sm">
                   <Button
                     size="sm"
-                    variant="secondary"
+                    className="bg-white text-primary hover:bg-white hover:scale-110 transition-transform shadow-lg"
                     onClick={() => onPreview(file.id)}
-                    className="bg-white/90 text-black hover:bg-white"
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
                   <Button
                     size="sm"
-                    variant="secondary"
+                    className="bg-white text-primary hover:bg-white hover:scale-110 transition-transform shadow-lg"
                     onClick={() => onDownload(file.id)}
-                    className="bg-white/90 text-black hover:bg-white"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
