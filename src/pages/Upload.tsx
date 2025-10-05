@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { ModernHeader } from "@/components/ModernHeader";
 import { UploadDialog } from "@/components/UploadDialog";
-import { uploadFile, formatFileSize } from "@/lib/fileService";
+import { uploadFile } from "@/lib/fileService";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FloatingAIChat from "@/components/FloatingAIChat";
 
@@ -43,7 +43,6 @@ const Upload = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       openFileDialog(e.dataTransfer.files[0]);
     }
@@ -81,192 +80,180 @@ const Upload = () => {
     setPendingFile(null);
 
     try {
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadingFiles(current => {
-          const updated = current.map(f => {
-            if (f.id === uploadingFile.id && f.status === 'uploading') {
-              const newProgress = Math.min(f.progress + Math.random() * 15, 95);
-              return { ...f, progress: newProgress };
-            }
-            return f;
-          });
-          return updated;
-        });
-      }, 300);
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setUploadingFiles(prev => 
+          prev.map(f => 
+            f.id === uploadingFile.id 
+              ? { ...f, progress: Math.min(f.progress + 10, 90) }
+              : f
+          )
+        );
+      }, 200);
 
-      // Perform actual upload
       const uploadedFile = await uploadFile({
-        file: pendingFile.file,
         name: data.title,
-        topic: undefined,
-        description: data.description || undefined,
-        tags: data.tags.length > 0 ? data.tags : undefined
+        description: data.description,
+        tags: data.tags,
+        file: pendingFile.file
       });
 
-      clearInterval(interval);
+      clearInterval(progressInterval);
 
-      // Mark as completed
-      setUploadingFiles(current =>
-        current.map(f =>
+      setUploadingFiles(prev =>
+        prev.map(f =>
           f.id === uploadingFile.id
             ? { ...f, progress: 100, status: 'completed' }
             : f
         )
       );
 
-      // Show success notification
       toast({
-        title: "Upload Successful! ✓",
-        description: `${data.title} has been uploaded successfully and is now visible to everyone.`,
-        className: "bg-primary text-primary-foreground",
+        title: "Upload Successful",
+        description: `${uploadedFile.name} has been uploaded successfully.`,
       });
 
-      // Remove from list after 3 seconds
+      // Remove completed upload after 3 seconds
       setTimeout(() => {
-        setUploadingFiles(current => current.filter(f => f.id !== uploadingFile.id));
+        setUploadingFiles(prev => prev.filter(f => f.id !== uploadingFile.id));
       }, 3000);
 
     } catch (error) {
       console.error('Upload error:', error);
-      setUploadingFiles(current =>
-        current.map(f =>
+      setUploadingFiles(prev =>
+        prev.map(f =>
           f.id === uploadingFile.id
-            ? { ...f, status: 'error', progress: 0 }
+            ? { ...f, progress: 0, status: 'error' }
             : f
         )
       );
 
       toast({
         title: "Upload Failed",
-        description: `Failed to upload ${data.title}. Please try again.`,
+        description: error instanceof Error ? error.message : "Failed to upload file. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  return (
-    <div className="min-h-screen">
-      <ModernHeader 
-        onSearch={() => {}}
-        searchResults={[]}
-        onDownload={() => {}}
-        onPreview={() => {}}
-        onShare={() => {}}
-      />
-      
-      <main className={`container mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'}`}>
-        <div className="max-w-4xl mx-auto">
-          <div className={`text-center ${isMobile ? 'mb-8' : 'mb-12'}`}>
-            <h1 className={`font-bold mb-4 ${isMobile ? 'text-3xl' : 'text-5xl'}`}>
-              <span className="hero-text">Upload Your Files</span>
-            </h1>
-            <p className={`text-muted-foreground ${isMobile ? 'text-lg' : 'text-xl'}`}>
-              Share your files with the world. Add title, tags, and description for better organization.
-            </p>
-          </div>
+  const handleCloseDialog = () => {
+    setPendingFile(null);
+  };
 
-          {/* Upload Zone */}
-          <div
-            className={`upload-zone cursor-pointer transition-all ${
-              dragActive ? 'border-primary bg-primary/10 scale-[1.02]' : ''
-            } ${isMobile ? 'p-12' : 'p-20'} text-center mb-8`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById('fileInput')?.click()}
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-6 shadow-lg">
-                <UploadIcon className="w-12 h-12 text-white" />
-              </div>
-              <h3 className={`font-semibold mb-3 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
-                Drop your files here
-              </h3>
-              <p className={`text-muted-foreground mb-6 ${isMobile ? 'text-sm' : 'text-base'}`}>
-                or click to browse from your computer
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-amber-50">
+      <ModernHeader currentPage="upload" />
+      
+      <main className="container mx-auto px-4 py-8 pt-24">
+        <div className="max-w-4xl mx-auto">
+          {/* Upload Area */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-8 mb-8">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold text-stone-800 mb-4">
+                Upload Files
+              </h1>
+              <p className="text-lg text-stone-600">
+                Share your files with the Amble community
               </p>
-              <Button 
-                size="lg"
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white font-semibold px-8 shadow-lg"
+            </div>
+
+            {/* Drag and Drop Area */}
+            <div
+              className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${
+                dragActive
+                  ? "border-amber-500 bg-amber-50"
+                  : "border-stone-300 hover:border-amber-400"
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <UploadIcon className="w-16 h-16 text-stone-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-stone-700 mb-2">
+                Drag and drop files here
+              </h3>
+              <p className="text-stone-500 mb-4">or</p>
+              
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                onChange={handleFileSelect}
+                accept="*/*"
+              />
+              
+              <Button
+                onClick={() => document.getElementById('file-upload')?.click()}
+                className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white"
               >
                 Choose Files
               </Button>
-              <input
-                id="fileInput"
-                type="file"
-                accept="*/*"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
+            </div>
+
+            {/* Upload Guidelines */}
+            <div className="mt-8 grid md:grid-cols-3 gap-6 text-sm text-stone-600">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <UploadIcon className="w-6 h-6 text-blue-600" />
+                </div>
+                <h4 className="font-semibold text-stone-800 mb-1">Easy Upload</h4>
+                <p>Simply drag and drop or click to select files</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                </div>
+                <h4 className="font-semibold text-stone-800 mb-1">Instant Access</h4>
+                <p>Files are immediately available for download</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <UploadIcon className="w-6 h-6 text-purple-600" />
+                </div>
+                <h4 className="font-semibold text-stone-800 mb-1">Share Anywhere</h4>
+                <p>Share your files with anyone, anywhere</p>
+              </div>
             </div>
           </div>
 
-          <div className={`text-center text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'} space-y-1`}>
-            <p>Maximum file size: 100MB</p>
-            <p>Supported formats: All file types</p>
-            <p>Files are stored locally in your browser</p>
-          </div>
-
-          {/* Upload Progress - Fixed position at bottom right */}
+          {/* Upload Progress */}
           {uploadingFiles.length > 0 && (
-            <div className="fixed bottom-24 right-8 space-y-3 z-50 max-w-sm">
-              {uploadingFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="bg-card border border-border rounded-xl p-4 shadow-2xl animate-fade-in"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    {file.status === 'completed' ? (
-                      <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-8">
+              <h2 className="text-2xl font-bold text-stone-800 mb-6">Upload Progress</h2>
+              <div className="space-y-4">
+                {uploadingFiles.map((file) => (
+                  <div key={file.id} className="border rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-stone-800">{file.name}</span>
+                      <span className="text-sm text-stone-500">
+                        {file.status === 'uploading' && `${file.progress}%`}
+                        {file.status === 'completed' && '✓ Complete'}
+                        {file.status === 'error' && '✗ Failed'}
+                      </span>
+                    </div>
+                    {file.status === 'uploading' && (
+                      <Progress value={file.progress} className="h-2" />
                     )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatFileSize(file.file.size)}
-                      </p>
-                    </div>
                   </div>
-                  
-                  {file.status === 'uploading' && (
-                    <div className="space-y-1">
-                      <Progress value={file.progress} className="h-1.5" />
-                      <p className="text-xs text-muted-foreground text-right">
-                        {Math.round(file.progress)}%
-                      </p>
-                    </div>
-                  )}
-                  
-                  {file.status === 'completed' && (
-                    <p className="text-sm text-primary font-medium">
-                      Upload successful! ✓
-                    </p>
-                  )}
-                  
-                  {file.status === 'error' && (
-                    <p className="text-sm text-destructive font-medium">
-                      Upload failed
-                    </p>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
       </main>
 
       {/* Upload Dialog */}
-      <UploadDialog
-        file={pendingFile?.file || null}
-        isOpen={!!pendingFile}
-        onClose={() => setPendingFile(null)}
-        onConfirm={handleUploadConfirm}
-      />
+      {pendingFile && (
+        <UploadDialog
+          file={pendingFile.file}
+          isOpen={!!pendingFile}
+          onClose={handleCloseDialog}
+          onConfirm={handleUploadConfirm}
+        />
+      )}
 
-      <FloatingAIChat />
+      {!isMobile && <FloatingAIChat />}
     </div>
   );
 };
