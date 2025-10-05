@@ -1,16 +1,18 @@
 // Simple AI chat service for direct Groq API calls
 export const chatWithAI = async (message: string): Promise<string> => {
-  const apiKey = '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';
+  const apiKey = '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';
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
+      mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-oss-120b',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           {
             role: 'system',

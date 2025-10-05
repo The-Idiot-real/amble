@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ModernFileGrid } from '@/components/ModernFileGrid';
-import { FilePreview } from '@/components/FilePreview';
+import { EnhancedFilePreview } from '@/components/EnhancedFilePreview';
 import { ModernHeader } from '@/components/ModernHeader';
 import { useToast } from '@/hooks/use-toast';
 import { getLocalFilesPaginated, downloadLocalFile, LocalFileData, formatFileSize } from '@/lib/localFileStorage';
@@ -45,6 +45,14 @@ const Index = () => {
   useEffect(() => {
     loadFiles();
   }, [currentPage, searchQuery]);
+
+  // Load files on mount to ensure they show up
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadFiles();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const loadFiles = async () => {
     try {
@@ -161,7 +169,7 @@ const Index = () => {
       </main>
 
       {previewFile && (
-        <FilePreview 
+        <EnhancedFilePreview 
           file={previewFile} 
           isOpen={!!previewFile}
           onClose={closePreview}

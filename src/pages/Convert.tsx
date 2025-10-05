@@ -1,14 +1,14 @@
 import { useState, useCallback } from "react";
-import { RefreshCw, Upload as UploadIcon, Download, X, File, ArrowRight } from "lucide-react";
+import { RefreshCw, Download, X, File, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Header } from "@/components/Header";
+import { ModernHeader } from "@/components/ModernHeader";
 import { Badge } from "@/components/ui/badge";
-import { convertFile, downloadConvertedFile, formatFileSize } from "@/lib/localFileConverter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FloatingAIChat from "@/components/FloatingAIChat";
+import FileConverter from "@/lib/realFileConverter";
 
 interface ConversionJob {
   id: string;
@@ -17,8 +17,9 @@ interface ConversionJob {
   targetFormat: string;
   fileSize: string;
   progress: number;
-  status: 'uploading' | 'converting' | 'completed' | 'error';
-  convertedFileId?: string;
+  status: 'converting' | 'completed' | 'error';
+  convertedBlob?: Blob;
+  convertedFilename?: string;
 }
 
 const Convert = () => {
@@ -29,23 +30,11 @@ const Convert = () => {
   const isMobile = useIsMobile();
 
   const formatOptions = [
-    { value: "pdf", label: "PDF", category: "Document" },
-    { value: "docx", label: "Word Document", category: "Document" },
-    { value: "xlsx", label: "Excel Spreadsheet", category: "Document" },
-    { value: "pptx", label: "PowerPoint", category: "Document" },
+    { value: "pdf", label: "PDF Document", category: "Document" },
     { value: "txt", label: "Text File", category: "Document" },
-    { value: "jpg", label: "JPEG Image", category: "Image" },
-    { value: "png", label: "PNG Image", category: "Image" },
-    { value: "webp", label: "WebP Image", category: "Image" },
-    { value: "gif", label: "GIF Image", category: "Image" },
-    { value: "svg", label: "SVG Vector", category: "Image" },
-    { value: "mp4", label: "MP4 Video", category: "Video" },
-    { value: "avi", label: "AVI Video", category: "Video" },
-    { value: "mov", label: "MOV Video", category: "Video" },
-    { value: "mp3", label: "MP3 Audio", category: "Audio" },
-    { value: "wav", label: "WAV Audio", category: "Audio" },
-    { value: "zip", label: "ZIP Archive", category: "Archive" },
-    { value: "rar", label: "RAR Archive", category: "Archive" },
+    { value: "json", label: "JSON", category: "Data" },
+    { value: "csv", label: "CSV", category: "Data" },
+    { value: "xlsx", label: "Excel Spreadsheet", category: "Document" },
   ];
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -78,6 +67,14 @@ const Convert = () => {
     return fileName.split('.').pop()?.toLowerCase() || '';
   };
 
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   const handleFiles = async (fileList: FileList) => {
     if (!selectedFormat) {
       toast({
@@ -88,78 +85,71 @@ const Convert = () => {
       return;
     }
 
-    const newConversions = Array.from(fileList).map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      fileName: file.name,
-      originalFormat: getFileExtension(file.name),
-      targetFormat: selectedFormat,
-      fileSize: formatFileSize(file.size),
-      progress: 0,
-      status: 'uploading' as const
-    }));
-
-    setConversions(prev => [...prev, ...newConversions]);
-
-    // Process each file
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      const conversionIndex = conversions.length + i;
+      const conversionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+      const newConversion: ConversionJob = {
+        id: conversionId,
+        fileName: file.name,
+        originalFormat: getFileExtension(file.name),
+        targetFormat: selectedFormat,
+        fileSize: formatFileSize(file.size),
+        progress: 0,
+        status: 'converting'
+      };
+
+      setConversions(prev => [...prev, newConversion]);
 
       try {
-        // Simulate upload progress
-        const uploadInterval = setInterval(() => {
+        // Simulate progress
+        const progressInterval = setInterval(() => {
           setConversions(current => {
-            const updated = [...current];
-            if (updated[conversionIndex] && updated[conversionIndex].status === 'uploading') {
-              updated[conversionIndex].progress += Math.random() * 20;
-              if (updated[conversionIndex].progress >= 50) {
-                updated[conversionIndex].status = 'converting';
-                updated[conversionIndex].progress = 50;
-                clearInterval(uploadInterval);
+            const updated = current.map(c => {
+              if (c.id === conversionId && c.status === 'converting' && c.progress < 90) {
+                return { ...c, progress: c.progress + Math.random() * 10 };
               }
-            }
+              return c;
+            });
             return updated;
           });
         }, 200);
 
         // Perform actual conversion
-        const convertedFile = await convertFile(file, selectedFormat);
+        const result = await FileConverter.convertFile(file, selectedFormat);
 
-        // Update conversion progress
-        const conversionInterval = setInterval(() => {
-          setConversions(current => {
-            const updated = [...current];
-            if (updated[conversionIndex] && updated[conversionIndex].status === 'converting') {
-              updated[conversionIndex].progress += Math.random() * 10;
-              if (updated[conversionIndex].progress >= 100) {
-                updated[conversionIndex].progress = 100;
-                updated[conversionIndex].status = 'completed';
-                updated[conversionIndex].convertedFileId = convertedFile.id;
-                clearInterval(conversionInterval);
-                
-                toast({
-                  title: "Conversion Complete",
-                  description: `${file.name} converted to ${selectedFormat.toUpperCase()}`,
-                });
-              }
-            }
-            return updated;
+        clearInterval(progressInterval);
+
+        if (result.success && result.blob) {
+          setConversions(current =>
+            current.map(c =>
+              c.id === conversionId
+                ? { ...c, progress: 100, status: 'completed', convertedBlob: result.blob, convertedFilename: result.filename }
+                : c
+            )
+          );
+
+          toast({
+            title: "Conversion Complete! ✓",
+            description: `${file.name} converted to ${selectedFormat.toUpperCase()}`,
+            className: "bg-primary text-primary-foreground",
           });
-        }, 300);
+        } else {
+          throw new Error(result.error || 'Conversion failed');
+        }
 
       } catch (error) {
-        setConversions(current => {
-          const updated = [...current];
-          if (updated[conversionIndex]) {
-            updated[conversionIndex].status = 'error';
-            updated[conversionIndex].progress = 0;
-          }
-          return updated;
-        });
+        setConversions(current =>
+          current.map(c =>
+            c.id === conversionId
+              ? { ...c, status: 'error', progress: 0 }
+              : c
+          )
+        );
 
         toast({
           title: "Conversion Failed",
-          description: `Failed to convert ${file.name}. Please try again.`,
+          description: error instanceof Error ? error.message : 'An error occurred during conversion',
           variant: "destructive",
         });
       }
@@ -171,54 +161,48 @@ const Convert = () => {
   };
 
   const downloadFile = (conversion: ConversionJob) => {
-    if (conversion.convertedFileId) {
-      downloadConvertedFile(conversion.convertedFileId);
+    if (conversion.convertedBlob && conversion.convertedFilename) {
+      const url = URL.createObjectURL(conversion.convertedBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = conversion.convertedFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
       toast({
         title: "Download Started",
-        description: `Downloading converted ${conversion.fileName}`,
+        description: `Downloading ${conversion.convertedFilename}`,
       });
-    }
-  };
-
-  const getStatusColor = (status: ConversionJob['status']) => {
-    switch (status) {
-      case 'uploading': return 'bg-blue-500';
-      case 'converting': return 'bg-yellow-500';
-      case 'completed': return 'bg-green-500';
-      case 'error': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getStatusText = (status: ConversionJob['status']) => {
-    switch (status) {
-      case 'uploading': return 'Uploading...';
-      case 'converting': return 'Converting...';
-      case 'completed': return 'Ready to download';
-      case 'error': return 'Conversion failed';
-      default: return 'Unknown';
     }
   };
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <ModernHeader 
+        onSearch={() => {}}
+        searchResults={[]}
+        onDownload={() => {}}
+        onPreview={() => {}}
+        onShare={() => {}}
+      />
       
       <main className={`container mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'}`}>
         <div className="max-w-6xl mx-auto">
           <div className={`text-center ${isMobile ? 'mb-8' : 'mb-12'}`}>
-            <h1 className={`font-bold mb-4 ${isMobile ? 'text-3xl' : 'text-4xl'}`}>
-              <span className="gradient-text">File Converter</span>
+            <h1 className={`font-bold mb-4 ${isMobile ? 'text-3xl' : 'text-5xl'}`}>
+              <span className="hero-text">File Converter</span>
             </h1>
             <p className={`text-muted-foreground ${isMobile ? 'text-lg' : 'text-xl'}`}>
-              Convert your files between different formats quickly and securely using local processing.
+              Convert your files between different formats quickly and securely.
             </p>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-2">
             {/* Conversion Setup */}
             <div className="space-y-6">
-              <div className="file-card">
+              <div className="modern-card">
                 <h3 className="text-lg font-semibold mb-4">Select Target Format</h3>
                 <Select value={selectedFormat} onValueChange={setSelectedFormat}>
                   <SelectTrigger className="w-full">
@@ -248,8 +232,8 @@ const Convert = () => {
               </div>
 
               <div
-                className={`upload-zone p-12 text-center cursor-pointer transition-all ${
-                  dragActive ? 'border-primary scale-105' : ''
+                className={`upload-zone p-16 text-center cursor-pointer transition-all ${
+                  dragActive ? 'border-primary bg-primary/10 scale-[1.02]' : ''
                 } ${!selectedFormat ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -267,7 +251,9 @@ const Convert = () => {
                   }
                 }}
               >
-                <RefreshCw className="w-16 h-16 text-primary mx-auto mb-4" />
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                  <RefreshCw className="w-10 h-10 text-white" />
+                </div>
                 <h3 className="text-xl font-semibold mb-2">
                   {selectedFormat ? `Convert to ${selectedFormat.toUpperCase()}` : 'Select format first'}
                 </h3>
@@ -275,7 +261,7 @@ const Convert = () => {
                   Drop files here or click to browse
                 </p>
                 {selectedFormat && (
-                  <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent">
+                  <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white">
                     Choose Files
                   </Button>
                 )}
@@ -288,9 +274,11 @@ const Convert = () => {
                 />
               </div>
 
-              <div className="text-sm text-muted-foreground">
-                <p>Maximum file size: 100MB per file</p>
-                <p>Batch conversion supported</p>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>• Text to PDF conversion</p>
+                <p>• CSV ↔ JSON conversion</p>
+                <p>• CSV ↔ Excel conversion</p>
+                <p>• Maximum file size: 100MB</p>
               </div>
             </div>
 
@@ -299,19 +287,25 @@ const Convert = () => {
               <h3 className="text-lg font-semibold">Conversion Queue</h3>
               
               {conversions.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <File className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No conversions yet</p>
+                <div className="text-center py-16 text-muted-foreground">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                    <File className="w-8 h-8 opacity-50" />
+                  </div>
+                  <p className="text-lg mb-1">No conversions yet</p>
                   <p className="text-sm">Select a format and upload files to get started</p>
                 </div>
               ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
                   {conversions.map((conversion) => (
-                    <div key={conversion.id} className="file-card p-4">
+                    <div key={conversion.id} className="modern-card p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                            <File className="w-5 h-5 text-muted-foreground" />
+                          <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center shrink-0">
+                            {conversion.status === 'completed' ? (
+                              <CheckCircle2 className="w-5 h-5 text-primary" />
+                            ) : (
+                              <File className="w-5 h-5 text-primary" />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{conversion.fileName}</p>
@@ -320,7 +314,7 @@ const Convert = () => {
                                 {conversion.originalFormat.toUpperCase()}
                               </Badge>
                               <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
                                 {conversion.targetFormat.toUpperCase()}
                               </Badge>
                               <span className="text-xs text-muted-foreground">{conversion.fileSize}</span>
@@ -332,7 +326,7 @@ const Convert = () => {
                             <Button
                               size="sm"
                               onClick={() => downloadFile(conversion)}
-                              className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent"
+                              className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white"
                             >
                               <Download className="w-3 h-3 mr-1" />
                               Download
@@ -342,47 +336,42 @@ const Convert = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => removeConversion(conversion.id)}
-                            className="w-6 h-6"
+                            className="w-8 h-8"
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
                       
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            {getStatusText(conversion.status)}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {Math.round(conversion.progress)}%
-                          </span>
+                      {conversion.status === 'converting' && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              Converting...
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(conversion.progress)}%
+                            </span>
+                          </div>
+                          <Progress value={conversion.progress} className="h-2" />
                         </div>
-                        <Progress value={conversion.progress} className="h-2" />
-                      </div>
+                      )}
+
+                      {conversion.status === 'completed' && (
+                        <p className="text-sm text-primary font-medium">
+                          Conversion complete! ✓
+                        </p>
+                      )}
+
+                      {conversion.status === 'error' && (
+                        <p className="text-sm text-destructive font-medium">
+                          Conversion failed
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Popular Conversions */}
-          <div className="mt-16">
-            <h3 className="text-2xl font-bold mb-6 text-center">Popular Conversions</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {[
-                "PDF → DOCX", "JPG → PNG", "MP4 → MP3", 
-                "DOCX → PDF", "PNG → JPG", "WAV → MP3",
-                "XLSX → CSV", "GIF → MP4", "RAR → ZIP",
-                "SVG → PNG", "MOV → MP4", "PPTX → PDF"
-              ].map((conversion, index) => (
-                <div key={index} className="file-card text-center p-4 hover:scale-105 transition-transform cursor-pointer">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {conversion}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>
