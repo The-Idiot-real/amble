@@ -2,40 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Greenish-Bluish Professional Design System */
+/* Vibrant Interactive Design System */
 :root {
-  /* Professional Light Mode - Teal/Cyan Theme */
-  --background: 180 20% 98%;
-  --foreground: 200 15% 20%;
-  --card: 180 15% 99%;
-  --card-foreground: 200 15% 20%;
-  --popover: 180 20% 98%;
-  --popover-foreground: 200 15% 20%;
-  --primary: 175 60% 45%;
-  --primary-dark: 175 60% 35%;
+  /* Vibrant Light Mode - Colorful Teal/Cyan */
+  --background: 180 45% 96%;
+  --foreground: 200 25% 12%;
+  --card: 180 50% 99%;
+  --card-foreground: 200 25% 12%;
+  --popover: 180 50% 99%;
+  --popover-foreground: 200 25% 12%;
+  --primary: 175 75% 48%;
+  --primary-dark: 175 75% 40%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 185 25% 90%;
-  --secondary-foreground: 200 15% 20%;
-  --muted: 185 20% 94%;
-  --muted-foreground: 200 10% 45%;
-  --accent: 165 65% 50%;
+  --secondary: 185 70% 85%;
+  --secondary-foreground: 200 25% 12%;
+  --muted: 185 40% 90%;
+  --muted-foreground: 200 15% 40%;
+  --accent: 190 80% 58%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 185 20% 88%;
-  --input: 185 20% 88%;
-  --ring: 175 60% 45%;
-  --radius: 0.75rem;
+  --destructive: 0 90% 62%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 180 30% 83%;
+  --input: 180 30% 83%;
+  --ring: 175 75% 48%;
+  --radius: 1rem;
   
-  /* Teal/Cyan Gradients */
-  --gradient-primary: linear-gradient(135deg, hsl(175, 60%, 45%), hsl(190, 70%, 50%));
-  --gradient-secondary: linear-gradient(135deg, hsl(185, 25%, 90%), hsl(185, 20%, 94%));
-  --gradient-bg: linear-gradient(180deg, hsl(180, 20%, 98%), hsl(185, 25%, 96%));
+  /* Vibrant Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(175, 75%, 48%) 0%, hsl(190, 80%, 58%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(165, 70%, 52%) 0%, hsl(180, 75%, 55%) 100%);
+  --gradient-bg: linear-gradient(135deg, hsl(180, 45%, 96%) 0%, hsl(185, 50%, 94%) 50%, hsl(175, 45%, 95%) 100%);
+  --gradient-card: linear-gradient(135deg, hsl(180, 60%, 98%) 0%, hsl(185, 55%, 96%) 100%);
   
-  /* Elegant Shadows */
-  --shadow-card: 0 2px 8px hsl(175 60% 45% / 0.08);
-  --shadow-upload: 0 4px 12px hsl(175 60% 45% / 0.12);
-  --shadow-glow: 0 0 20px hsl(175 60% 45% / 0.15);
+  /* Interactive Shadows with Color */
+  --shadow-card: 0 4px 16px hsl(175 75% 48% / 0.12), 0 2px 6px hsl(190 80% 58% / 0.08);
+  --shadow-upload: 0 8px 24px hsl(175 75% 48% / 0.18), 0 4px 12px hsl(190 80% 58% / 0.12);
+  --shadow-glow: 0 0 30px hsl(175 75% 48% / 0.25), 0 0 15px hsl(190 80% 58% / 0.15);
+  --shadow-hover: 0 12px 32px hsl(175 75% 48% / 0.25), 0 6px 16px hsl(190 80% 58% / 0.15);
   
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
@@ -48,37 +50,39 @@
 }
 
 .dark {
-  /* Dark Teal/Cyan Mode */
-  --background: 195 25% 10%;
-  --foreground: 180 15% 95%;
-  --card: 195 22% 12%;
-  --card-foreground: 180 15% 95%;
-  --popover: 195 25% 10%;
-  --popover-foreground: 180 15% 95%;
-  --primary: 175 70% 55%;
-  --primary-dark: 175 70% 45%;
-  --primary-foreground: 195 25% 10%;
-  --secondary: 195 20% 18%;
-  --secondary-foreground: 180 15% 95%;
-  --muted: 195 20% 18%;
-  --muted-foreground: 185 15% 65%;
-  --accent: 165 75% 60%;
-  --accent-foreground: 195 25% 10%;
-  --destructive: 0 63% 31%;
-  --destructive-foreground: 180 15% 95%;
-  --border: 195 20% 22%;
-  --input: 195 20% 22%;
-  --ring: 175 70% 55%;
+  /* Vibrant Dark Mode with Glow */
+  --background: 195 40% 8%;
+  --foreground: 180 25% 96%;
+  --card: 195 35% 10%;
+  --card-foreground: 180 25% 96%;
+  --popover: 195 35% 10%;
+  --popover-foreground: 180 25% 96%;
+  --primary: 175 75% 60%;
+  --primary-dark: 175 75% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 195 30% 16%;
+  --secondary-foreground: 180 25% 96%;
+  --muted: 195 25% 18%;
+  --muted-foreground: 185 20% 70%;
+  --accent: 190 80% 65%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 70% 58%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 195 25% 24%;
+  --input: 195 25% 24%;
+  --ring: 175 75% 60%;
 
-  /* Teal Glow Gradients */
-  --gradient-primary: linear-gradient(135deg, hsl(175, 70%, 55%), hsl(190, 75%, 60%));
-  --gradient-secondary: linear-gradient(135deg, hsl(195, 20%, 18%), hsl(195, 20%, 22%));
-  --gradient-bg: linear-gradient(180deg, hsl(195, 25%, 10%), hsl(195, 22%, 14%));
+  /* Vibrant Dark Gradients with Glow */
+  --gradient-primary: linear-gradient(135deg, hsl(175, 75%, 60%) 0%, hsl(190, 80%, 65%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(165, 70%, 58%) 0%, hsl(180, 75%, 60%) 100%);
+  --gradient-bg: linear-gradient(135deg, hsl(195, 40%, 8%) 0%, hsl(195, 35%, 11%) 50%, hsl(190, 40%, 9%) 100%);
+  --gradient-card: linear-gradient(135deg, hsl(195, 35%, 10%) 0%, hsl(195, 30%, 13%) 100%);
   
-  /* Teal Glow Shadows */
-  --shadow-card: 0 4px 24px hsl(175 70% 55% / 0.15);
-  --shadow-upload: 0 8px 32px hsl(175 70% 55% / 0.25);
-  --shadow-glow: 0 0 40px hsl(175 70% 55% / 0.35);
+  /* Vibrant Glow Shadows */
+  --shadow-card: 0 6px 24px hsl(175 75% 60% / 0.20), 0 3px 12px hsl(190 80% 65% / 0.15);
+  --shadow-upload: 0 10px 36px hsl(175 75% 60% / 0.30), 0 5px 18px hsl(190 80% 65% / 0.20);
+  --shadow-glow: 0 0 45px hsl(175 75% 60% / 0.40), 0 0 20px hsl(190 80% 65% / 0.25);
+  --shadow-hover: 0 15px 48px hsl(175 75% 60% / 0.35), 0 8px 24px hsl(190 80% 65% / 0.20);
 }
 
 * {
@@ -90,41 +94,50 @@ body {
   color: hsl(var(--foreground));
   background: var(--gradient-bg);
   min-height: 100vh;
+  background-attachment: fixed;
 }
 
-/* Modern Components */
+/* Interactive Modern Components */
+
+.upload-zone {
+  @apply border-[3px] border-dashed border-primary/40 rounded-3xl bg-gradient-to-br from-primary/5 to-accent/5 transition-all duration-300 backdrop-blur-sm;
+}
+
+.upload-zone:hover {
+  @apply border-primary/70 bg-gradient-to-br from-primary/10 to-accent/10 scale-[1.01];
+  box-shadow: var(--shadow-glow);
+}
 
 .modern-card {
-  @apply bg-card border border-border/50 rounded-2xl p-6 transition-all duration-300;
+  @apply bg-card border-2 border-primary/25 rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1;
+  background: var(--gradient-card);
   box-shadow: var(--shadow-card);
 }
 
 .modern-card:hover {
-  @apply border-primary/20;
-  box-shadow: var(--shadow-upload);
-}
-
-.upload-zone {
-  @apply border-2 border-dashed border-border rounded-3xl bg-muted/20 transition-all duration-300 backdrop-blur-sm;
-}
-
-.upload-zone:hover {
-  @apply border-primary/50 bg-primary/5;
-  box-shadow: var(--shadow-glow);
+  @apply border-primary/40 scale-[1.02];
+  box-shadow: var(--shadow-hover);
 }
 
 .hero-text {
-  @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+  @apply font-bold;
+  background: var(--gradient-primary);
   background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   animation: shimmer 3s linear infinite;
+  filter: drop-shadow(0 0 24px hsl(var(--primary) / 0.35));
 }
 
 .glass-effect {
-  @apply bg-white/10 backdrop-blur-md border border-white/20;
+  @apply bg-card/60 backdrop-blur-xl border-2 border-primary/30 rounded-2xl;
+  box-shadow: var(--shadow-card), inset 0 0 20px hsl(var(--primary) / 0.05);
 }
 
 .dark .glass-effect {
-  @apply bg-black/20 backdrop-blur-md border border-white/10;
+  @apply bg-card/40 backdrop-blur-xl border-2 border-primary/40;
+  box-shadow: var(--shadow-glow), inset 0 0 30px hsl(var(--primary) / 0.08);
 }
 
 /* AI Chat Styles */
@@ -141,7 +154,10 @@ body {
 }
 
 .ai-chat-container {
-  @apply bg-card border border-border/50 rounded-3xl w-full max-w-lg h-[700px] flex flex-col overflow-hidden;
+  @apply bg-card border-2 border-primary/30 rounded-3xl w-full flex flex-col overflow-hidden;
+  max-width: min(90vw, 32rem);
+  max-height: min(85vh, 700px);
+  height: auto;
   box-shadow: var(--shadow-upload);
 }
 

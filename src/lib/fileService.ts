@@ -100,27 +100,46 @@ export const getFiles = async (page = 1, limit = 9, searchQuery = ''): Promise<{
 };
 
 export const downloadFile = async (fileId: string): Promise<void> => {
-  // Get current file data
+  // Get file data with storage path and original name
   const { data: fileData, error: fetchError } = await supabase
     .from('files')
-    .select('download_count')
+    .select('*')
     .eq('id', fileId)
     .single();
 
-  if (fetchError) {
+  if (fetchError || !fileData) {
     console.error('Failed to fetch file data:', fetchError);
     return;
   }
 
+  // Get the file extension from original_name
+  const fileExt = fileData.original_name.split('.').pop();
+  
+  // Download file from storage
+  const { data: blob, error: downloadError } = await supabase.storage
+    .from('files')
+    .download(fileData.storage_path);
+
+  if (downloadError || !blob) {
+    console.error('Failed to download file:', downloadError);
+    return;
+  }
+
+  // Create download link with proper extension
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileData.original_name; // Use original name with extension
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
   // Increment download count
-  const { error } = await supabase
+  await supabase
     .from('files')
     .update({ download_count: (fileData.download_count || 0) + 1 })
     .eq('id', fileId);
-
-  if (error) {
-    console.error('Failed to update download count:', error);
-  }
 };
 
 export const searchFiles = async (query: string): Promise<FileData[]> => {

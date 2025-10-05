@@ -44,6 +44,7 @@ const Convert = () => {
     { value: "png", label: "PNG Image", category: "Image" },
     { value: "jpg", label: "JPEG Image", category: "Image" },
     { value: "webp", label: "WebP Image", category: "Image" },
+    { value: "gif", label: "GIF Image", category: "Image" },
   ];
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -219,7 +220,7 @@ const Convert = () => {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Choose output format..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[50vh] overflow-y-auto">
                     {Object.entries(
                       formatOptions.reduce((acc, format) => {
                         if (!acc[format.category]) acc[format.category] = [];

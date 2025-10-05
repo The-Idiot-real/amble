@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { ModernHeader } from "@/components/ModernHeader";
 import { UploadDialog } from "@/components/UploadDialog";
-import { uploadFileLocally, formatFileSize } from "@/lib/localFileStorage";
+import { uploadFile, formatFileSize } from "@/lib/fileService";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FloatingAIChat from "@/components/FloatingAIChat";
 
@@ -96,7 +96,7 @@ const Upload = () => {
       }, 300);
 
       // Perform actual upload
-      await uploadFileLocally({
+      const uploadedFile = await uploadFile({
         file: pendingFile.file,
         name: data.title,
         topic: undefined,
@@ -118,7 +118,7 @@ const Upload = () => {
       // Show success notification
       toast({
         title: "Upload Successful! ✓",
-        description: `${data.title} has been uploaded successfully.`,
+        description: `${data.title} has been uploaded successfully and is now visible to everyone.`,
         className: "bg-primary text-primary-foreground",
       });
 
