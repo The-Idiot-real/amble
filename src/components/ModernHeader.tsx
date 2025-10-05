@@ -6,6 +6,7 @@ import { useTheme } from '@/components/ThemeProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Link, useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { AmbleLogo } from '@/components/AmbleLogo';
 import {
   Sheet,
   SheetContent,
@@ -109,9 +110,7 @@ export const ModernHeader = ({
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-primary to-accent flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
+            <AmbleLogo size={40} />
             <span className="font-bold text-xl hero-text">Amble</span>
           </Link>
 

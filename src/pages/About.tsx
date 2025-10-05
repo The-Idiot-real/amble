@@ -1,4 +1,4 @@
-import { Header } from "@/components/Header";
+import { ModernHeader } from "@/components/ModernHeader";
 import { Shield, Zap, Users, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getStats, AppStats } from "@/lib/fileStorage";
@@ -30,7 +30,13 @@ const About = () => {
     description: "Built by developers who care about user experience and data privacy."
   }];
   return <div className="min-h-screen">
-      <Header />
+      <ModernHeader 
+        onSearch={() => {}}
+        searchResults={[]}
+        onDownload={() => {}}
+        onPreview={() => {}}
+        onShare={() => {}}
+      />
       
       <main className="container mx-auto px-6 py-12">
         <div className="max-w-4xl mx-auto">

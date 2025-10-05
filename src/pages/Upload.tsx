@@ -196,6 +196,7 @@ const Upload = () => {
               <input
                 id="fileInput"
                 type="file"
+                accept="*/*"
                 className="hidden"
                 onChange={handleFileSelect}
               />

@@ -75,7 +75,7 @@ const FloatingAIChat = () => {
       });
 
       let requestBody: any = {
-        model: 'openai/gpt-oss-120b', // Latest GPT OSS model
+        model: 'llama-3.3-70b-versatile',
         messages: [
           {
             role: 'system',
@@ -109,9 +109,11 @@ const FloatingAIChat = () => {
 
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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',
+          'Authorization': 'Bearer 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',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(requestBody),
       });

@@ -8,7 +8,7 @@ import { ModernHeader } from "@/components/ModernHeader";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FloatingAIChat from "@/components/FloatingAIChat";
-import FileConverter from "@/lib/realFileConverter";
+import { EnhancedFileConverter } from "@/lib/enhancedFileConverter";
 
 interface ConversionJob {
   id: string;
@@ -30,11 +30,20 @@ const Convert = () => {
   const isMobile = useIsMobile();
 
   const formatOptions = [
+    // Documents
     { value: "pdf", label: "PDF Document", category: "Document" },
     { value: "txt", label: "Text File", category: "Document" },
+    { value: "html", label: "HTML Page", category: "Document" },
+    
+    // Data Formats
     { value: "json", label: "JSON", category: "Data" },
     { value: "csv", label: "CSV", category: "Data" },
-    { value: "xlsx", label: "Excel Spreadsheet", category: "Document" },
+    { value: "xlsx", label: "Excel Spreadsheet", category: "Data" },
+    
+    // Image Formats
+    { value: "png", label: "PNG Image", category: "Image" },
+    { value: "jpg", label: "JPEG Image", category: "Image" },
+    { value: "webp", label: "WebP Image", category: "Image" },
   ];
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -116,7 +125,9 @@ const Convert = () => {
         }, 200);
 
         // Perform actual conversion
-        const result = await FileConverter.convertFile(file, selectedFormat);
+        console.log('Starting conversion:', file.name, 'to', selectedFormat);
+        const result = await EnhancedFileConverter.convertFile(file, selectedFormat);
+        console.log('Conversion result:', result);
 
         clearInterval(progressInterval);
 
@@ -275,9 +286,13 @@ const Convert = () => {
               </div>
 
               <div className="text-sm text-muted-foreground space-y-1">
-                <p>• Text to PDF conversion</p>
-                <p>• CSV ↔ JSON conversion</p>
-                <p>• CSV ↔ Excel conversion</p>
+                <p className="font-medium mb-2">Supported Conversions:</p>
+                <p>• Text/Markdown/HTML → PDF</p>
+                <p>• Images (PNG, JPG, WEBP) → PDF</p>
+                <p>• CSV ↔ JSON ↔ Excel (XLSX)</p>
+                <p>• Markdown → HTML</p>
+                <p>• Image format conversions</p>
+                <p>• HTML → Text</p>
                 <p>• Maximum file size: 100MB</p>
               </div>
             </div>
