@@ -141,8 +141,8 @@ const Upload = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-amber-50">
-      <ModernHeader currentPage="upload" />
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-amber-50 dark:from-stone-950 dark:to-amber-950">
+      <ModernHeader />
       
       <main className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-4xl mx-auto">

@@ -32,6 +32,7 @@ interface ModernFileGridProps {
   onPreview: (fileId: string) => void;
   onShare: (fileId: string) => void;
   searchQuery: string;
+  isLoading?: boolean;
 }
 
 const getFileIcon = (type: string) => {
@@ -60,7 +61,8 @@ export const ModernFileGrid = ({
   onDownload, 
   onPreview, 
   onShare,
-  searchQuery 
+  searchQuery,
+  isLoading = false
 }: ModernFileGridProps) => {
   const isMobile = useIsMobile();
 

@@ -6,7 +6,7 @@ import { useTheme } from '@/components/ThemeProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Link, useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { AmbleLogo } from '@/components/AmbleLogo';
+import { ImprovedAmbleLogo } from '@/components/ImprovedAmbleLogo';
 import {
   Sheet,
   SheetContent,
@@ -30,21 +30,27 @@ interface SearchResult {
 }
 
 interface ModernHeaderProps {
-  onSearch: (query: string) => void;
-  searchResults: SearchResult[];
-  onDownload: (fileId: string) => void;
-  onPreview: (fileId: string) => void;
-  onShare: (fileId: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  currentPage?: string;
+  onSearch?: (query: string) => void;
+  searchResults?: SearchResult[];
+  onDownload?: (fileId: string) => void;
+  onPreview?: (fileId: string) => void;
+  onShare?: (fileId: string) => void;
 }
 
 export const ModernHeader = ({ 
+  searchQuery: externalSearchQuery,
+  onSearchChange,
+  currentPage,
   onSearch, 
-  searchResults, 
+  searchResults = [], 
   onDownload, 
   onPreview, 
   onShare 
 }: ModernHeaderProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || '');
   const [showResults, setShowResults] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -65,8 +71,13 @@ export const ModernHeader = ({
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    onSearch(query);
-    setShowResults(query.length > 0);
+    if (onSearchChange) {
+      onSearchChange(query);
+    }
+    if (onSearch) {
+      onSearch(query);
+    }
+    setShowResults(query.length > 0 && searchResults.length > 0);
   };
 
   const navigation = [
@@ -109,9 +120,11 @@ export const ModernHeader = ({
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <AmbleLogo size={40} />
-            <span className="font-bold text-xl hero-text">Amble</span>
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="transform transition-transform group-hover:scale-110">
+              <ImprovedAmbleLogo size={40} />
+            </div>
+            <span className="font-bold text-xl bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">Amble</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -136,7 +149,7 @@ export const ModernHeader = ({
             </div>
 
             {/* Search Results Dropdown */}
-            {showResults && (
+            {showResults && onPreview && onDownload && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-lg max-h-96 overflow-y-auto z-50">
                 {searchResults.length > 0 ? (
                   <div className="p-2">

@@ -120,33 +120,31 @@ export const getFiles = async (page: number = 1, itemsPerPage: number = 9, searc
   }
 };
 
-export const getUserFiles = async (page: number = 1, itemsPerPage: number = 9) => {
+export const getUserFiles = async (page: number = 1, itemsPerPage: number = 9): Promise<{ files: any[]; totalCount: number }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return { files: [], totalCount: 0 };
     }
     
-    let query = supabase
-      .from('files')
-      .select('*', { count: 'exact' })
-      .eq('user_id', user.id)
-      .order('upload_date', { ascending: false });
-    
     const from = (page - 1) * itemsPerPage;
     const to = from + itemsPerPage - 1;
     
-    query = query.range(from, to);
+    // @ts-ignore - TypeScript has issues with deep type inference on chained Supabase queries
+    const result: any = await supabase
+      .from('files')
+      .select('*', { count: 'exact' })
+      .eq('user_id', user.id)
+      .order('upload_date', { ascending: false })
+      .range(from, to);
     
-    const { data, error, count } = await query;
-    
-    if (error) {
-      throw error;
+    if (result.error) {
+      throw result.error;
     }
     
     return {
-      files: data || [],
-      totalCount: count || 0
+      files: result.data || [],
+      totalCount: result.count || 0
     };
   } catch (error) {
     console.error('Error fetching user files:', error);
@@ -159,9 +157,17 @@ export const getUserFiles = async (page: number = 1, itemsPerPage: number = 9) =
 
 export const updateFileDownloadCount = async (fileId: string) => {
   try {
+    // First get current count
+    const { data: fileData } = await supabase
+      .from('files')
+      .select('download_count')
+      .eq('id', fileId)
+      .single();
+    
+    // Update with incremented value
     const { error } = await supabase
       .from('files')
-      .update({ download_count: supabase.sql('download_count + 1') })
+      .update({ download_count: (fileData?.download_count || 0) + 1 })
       .eq('id', fileId);
       
     if (error) {

@@ -12,6 +12,7 @@ interface Message {
   content: string;
   timestamp: Date;
   files?: File[];
+  isStreaming?: boolean;
 }
 
 const FloatingAIChat = () => {
@@ -20,13 +21,14 @@ const FloatingAIChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [streamingText, setStreamingText] = useState('');
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Load chat history from localStorage
     const savedMessages = localStorage.getItem('ai-chat-history');
     if (savedMessages) {
       setMessages(JSON.parse(savedMessages));
@@ -34,16 +36,37 @@ const FloatingAIChat = () => {
   }, []);
 
   useEffect(() => {
-    // Save chat history to localStorage
     if (messages.length > 0) {
       localStorage.setItem('ai-chat-history', JSON.stringify(messages));
     }
   }, [messages]);
 
   useEffect(() => {
-    // Auto scroll to bottom
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, streamingText]);
+
+  const typeText = (text: string, messageId: string) => {
+    let index = 0;
+    setStreamingText('');
+    
+    const interval = setInterval(() => {
+      if (index < text.length) {
+        const char = text[index];
+        setStreamingText(prev => prev + char);
+        index++;
+      } else {
+        clearInterval(interval);
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === messageId 
+              ? { ...msg, content: text, isStreaming: false }
+              : msg
+          )
+        );
+        setStreamingText('');
+      }
+    }, 20);
+  };
 
   const sendMessage = async () => {
     if ((!input.trim() && attachedFiles.length === 0) || isLoading) return;
@@ -62,13 +85,11 @@ const FloatingAIChat = () => {
     setIsLoading(true);
 
     try {
-      // Prepare messages for API (include conversation history)
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
 
-      // Add current message
       conversationHistory.push({
         role: 'user',
         content: userMessage.content
@@ -87,7 +108,6 @@ const FloatingAIChat = () => {
         temperature: 0.7,
       };
 
-      // Handle file attachments for vision model
       if (attachedFiles.length > 0) {
         const fileAnalysis = await Promise.all(
           attachedFiles.map(async (file) => {
@@ -126,14 +146,17 @@ const FloatingAIChat = () => {
       const data = await response.json();
       const aiResponse = data.choices?.[0]?.message?.content || 'No response available';
 
+      const aiMessageId = (Date.now() + 1).toString();
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: aiMessageId,
         role: 'assistant',
-        content: aiResponse,
+        content: '',
         timestamp: new Date(),
+        isStreaming: true,
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      typeText(aiResponse, aiMessageId);
 
     } catch (error) {
       console.error('AI chat error:', error);
@@ -143,7 +166,6 @@ const FloatingAIChat = () => {
         variant: 'destructive',
       });
       
-      // Add error message to chat
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -232,7 +254,7 @@ const FloatingAIChat = () => {
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-4 h-96">
+        <ScrollArea className="flex-1 p-4 h-[400px]" ref={scrollAreaRef}>
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
               <Bot className="h-12 w-12 mb-4 opacity-50" />
@@ -255,7 +277,10 @@ const FloatingAIChat = () => {
                     </div>
                   )}
                   <div className={`chat-bubble ${message.role}`}>
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.isStreaming ? streamingText : message.content}
+                      {message.isStreaming && <span className="animate-pulse">▋</span>}
+                    </p>
                     {message.files && (
                       <div className="mt-2 text-xs opacity-75">
                         Attached: {message.files.map(f => f.name).join(', ')}
@@ -345,7 +370,7 @@ const FloatingAIChat = () => {
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*,.pdf,.txt,.doc,.docx"
+          accept="*/*"
           className="hidden"
           onChange={handleFileUpload}
         />

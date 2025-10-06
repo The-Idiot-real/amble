@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ModernFileGrid } from '@/components/ModernFileGrid';
 import { EnhancedFilePreview } from '@/components/EnhancedFilePreview';
 import { ModernHeader } from '@/components/ModernHeader';
+import { HeroSection } from '@/pages/HeroSection';
 import { useToast } from '@/hooks/use-toast';
 import { getFiles, updateFileDownloadCount, formatFileSize } from '@/lib/fileService';
 import FloatingAIChat from '@/components/FloatingAIChat';
@@ -69,19 +70,31 @@ const Index = () => {
 
   const downloadFile = async (fileId: string) => {
     try {
-      const file = files.find(f => f.id === fileId);
+      const { files: fetchedFiles } = await getFiles(1, 1000);
+      const file = fetchedFiles.find((f: any) => f.id === fileId);
       if (!file) return;
       
       // Update download count
       await updateFileDownloadCount(fileId);
       
-      // Create download link
+      // Get file extension from original name or file type
+      const extension = file.original_name.includes('.') 
+        ? file.original_name.split('.').pop() 
+        : file.file_type.split('/').pop();
+      
+      // Fetch the file as blob
+      const response = await fetch(file.file_path);
+      const blob = await response.blob();
+      
+      // Create download link with proper filename
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = file.thumbnail || '#';
-      link.download = file.name;
+      link.href = url;
+      link.download = `${file.name}.${extension}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
       // Update local state
       setFiles(prevFiles => 
@@ -106,17 +119,18 @@ const Index = () => {
     }
   };
 
-  const openPreview = (fileId: string) => {
-    const file = files.find(f => f.id === fileId);
-    if (file && file.thumbnail) {
+  const openPreview = async (fileId: string) => {
+    const { files: fetchedFiles } = await getFiles(1, 1000);
+    const file = fetchedFiles.find((f: any) => f.id === fileId);
+    if (file) {
       setPreviewFile({
         id: file.id,
         name: file.name,
-        size: file.size,
-        type: file.type,
-        data: file.thumbnail,
-        uploadDate: new Date(file.uploadDate),
-        downloadCount: file.downloadCount
+        size: formatFileSize(file.file_size),
+        type: file.file_type,
+        data: file.file_path,
+        uploadDate: new Date(file.upload_date),
+        downloadCount: file.download_count
       });
     }
   };
@@ -148,7 +162,7 @@ const Index = () => {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-amber-50 dark:from-stone-950 dark:to-amber-950">
       <ModernHeader 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -156,6 +170,8 @@ const Index = () => {
       />
       
       <main className="container mx-auto px-4 py-8 pt-24">
+        {files.length === 0 && !isLoading && !searchQuery && <HeroSection />}
+        
         <div ref={searchResultsRef}>
           <ModernFileGrid
             files={files}
@@ -175,6 +191,7 @@ const Index = () => {
       {previewFile && (
         <EnhancedFilePreview
           file={previewFile}
+          isOpen={!!previewFile}
           onClose={closePreview}
           onDownload={() => downloadFile(previewFile.id)}
         />
