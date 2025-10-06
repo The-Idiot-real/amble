@@ -28,11 +28,9 @@ export interface UploadFileData {
 export const uploadFile = async (data: UploadFileData): Promise<FileData> => {
   const { file, name, topic, description, tags } = data;
   
-  // Get current user
+  // Try to get current user but don't require it (anonymous uploads allowed)
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error('User not authenticated');
-  }
+  const userId = user?.id || null;
   
   // Generate unique file path
   const fileExt = file.name.split('.').pop();
@@ -56,7 +54,7 @@ export const uploadFile = async (data: UploadFileData): Promise<FileData> => {
     .from('files')
     .getPublicUrl(filePath);
     
-  // Save file metadata to database with user_id
+  // Save file metadata to database (user_id can be null for anonymous uploads)
   const { data: fileData, error: dbError } = await supabase
     .from('files')
     .insert({
@@ -72,7 +70,7 @@ export const uploadFile = async (data: UploadFileData): Promise<FileData> => {
       upload_date: new Date().toISOString(),
       download_count: 0,
       is_public: true,
-      user_id: user.id // Add user_id here
+      user_id: userId // Can be null for anonymous uploads
     })
     .select()
     .single();
