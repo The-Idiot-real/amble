@@ -132,11 +132,18 @@ const Convert = () => {
 
         clearInterval(progressInterval);
 
-        if (result.success && result.blob) {
+        if (result.success && result.blob && result.filename) {
+          console.log('Conversion successful, storing blob:', result.filename, 'size:', result.blob.size);
           setConversions(current =>
             current.map(c =>
               c.id === conversionId
-                ? { ...c, progress: 100, status: 'completed', convertedBlob: result.blob, convertedFilename: result.filename }
+                ? { 
+                    ...c, 
+                    progress: 100, 
+                    status: 'completed', 
+                    convertedBlob: result.blob, 
+                    convertedFilename: result.filename 
+                  }
                 : c
             )
           );
@@ -173,19 +180,44 @@ const Convert = () => {
   };
 
   const downloadFile = (conversion: ConversionJob) => {
-    if (conversion.convertedBlob && conversion.convertedFilename) {
+    console.log('Download clicked:', conversion);
+    console.log('Has blob:', !!conversion.convertedBlob);
+    console.log('Has filename:', !!conversion.convertedFilename);
+    
+    if (!conversion.convertedBlob || !conversion.convertedFilename) {
+      toast({
+        title: "Download Failed",
+        description: "Converted file not available",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
       const url = URL.createObjectURL(conversion.convertedBlob);
       const link = document.createElement('a');
       link.href = url;
       link.download = conversion.convertedFilename;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      
+      // Cleanup after a short delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
 
       toast({
         title: "Download Started",
         description: `Downloading ${conversion.convertedFilename}`,
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download file",
+        variant: "destructive",
       });
     }
   };
@@ -286,7 +318,7 @@ const Convert = () => {
                 />
               </div>
 
-              <div className="text-sm text-muted-foreground space-y-1">
+              <div className={`text-sm text-muted-foreground space-y-1 ${isMobile ? 'text-xs' : ''}`}>
                 <p className="font-medium mb-2">Supported Conversions:</p>
                 <p>• Text/Markdown/HTML → PDF</p>
                 <p>• Images (PNG, JPG, WEBP) → PDF</p>
@@ -294,7 +326,7 @@ const Convert = () => {
                 <p>• Markdown → HTML</p>
                 <p>• Image format conversions</p>
                 <p>• HTML → Text</p>
-                <p>• Maximum file size: 10GB</p>
+                <p className="font-semibold text-primary">• Maximum file size: 10GB</p>
               </div>
             </div>
 
@@ -338,19 +370,24 @@ const Convert = () => {
                           </div>
                         </div>
                         <div className={`flex items-center ${isMobile ? 'flex-col gap-2 w-full' : 'space-x-2'}`}>
-                          {conversion.status === 'completed' && conversion.convertedBlob && conversion.convertedFilename && (
+                          {conversion.status === 'completed' && (
                             <Button
                               size={isMobile ? "default" : "sm"}
-                              onClick={() => downloadFile(conversion)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                downloadFile(conversion);
+                              }}
+                              disabled={!conversion.convertedBlob || !conversion.convertedFilename}
                               className={`bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white ${isMobile ? 'w-full' : ''}`}
                             >
-                              <Download className="w-3 h-3 mr-1" />
+                              <Download className={`${isMobile ? 'w-4 h-4' : 'w-3 h-3'} mr-1`} />
                               Download
                             </Button>
                           )}
                           <Button
                             variant="ghost"
-                            size="icon"
+                            size={isMobile ? "default" : "icon"}
                             onClick={() => removeConversion(conversion.id)}
                             className={isMobile ? 'w-full' : 'w-8 h-8'}
                           >
