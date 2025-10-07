@@ -211,7 +211,7 @@ const Convert = () => {
             </p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div className={`grid gap-8 ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-2'}`}>
             {/* Conversion Setup */}
             <div className="space-y-6">
               <div className="modern-card">
@@ -244,7 +244,7 @@ const Convert = () => {
               </div>
 
               <div
-                className={`upload-zone p-16 text-center cursor-pointer transition-all ${
+                className={`upload-zone ${isMobile ? 'p-8' : 'p-16'} text-center cursor-pointer transition-all ${
                   dragActive ? 'border-primary bg-primary/10 scale-[1.02]' : ''
                 } ${!selectedFormat ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onDragEnter={handleDrag}
@@ -263,10 +263,10 @@ const Convert = () => {
                   }
                 }}
               >
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                  <RefreshCw className="w-10 h-10 text-white" />
+                <div className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg`}>
+                  <RefreshCw className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} text-white`} />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">
+                <h3 className={`font-semibold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`}>
                   {selectedFormat ? `Convert to ${selectedFormat.toUpperCase()}` : 'Select format first'}
                 </h3>
                 <p className="text-muted-foreground mb-4">
@@ -294,7 +294,7 @@ const Convert = () => {
                 <p>• Markdown → HTML</p>
                 <p>• Image format conversions</p>
                 <p>• HTML → Text</p>
-                <p>• Maximum file size: 100MB</p>
+                <p>• Maximum file size: 10GB</p>
               </div>
             </div>
 
@@ -314,7 +314,7 @@ const Convert = () => {
                 <div className="space-y-3 max-h-[600px] overflow-y-auto">
                   {conversions.map((conversion) => (
                     <div key={conversion.id} className="modern-card p-4">
-                      <div className="flex items-center justify-between mb-3">
+                      <div className={`flex ${isMobile ? 'flex-col' : 'items-center justify-between'} mb-3 gap-3`}>
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
                           <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center shrink-0">
                             {conversion.status === 'completed' ? (
@@ -325,11 +325,11 @@ const Convert = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{conversion.fileName}</p>
-                            <div className="flex items-center space-x-2 mt-1">
+                            <div className={`flex items-center ${isMobile ? 'flex-wrap' : ''} gap-2 mt-1`}>
                               <Badge variant="outline" className="text-xs">
                                 {conversion.originalFormat.toUpperCase()}
                               </Badge>
-                              <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                              <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
                               <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
                                 {conversion.targetFormat.toUpperCase()}
                               </Badge>
@@ -337,12 +337,12 @@ const Convert = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {conversion.status === 'completed' && (
+                        <div className={`flex items-center ${isMobile ? 'flex-col gap-2 w-full' : 'space-x-2'}`}>
+                          {conversion.status === 'completed' && conversion.convertedBlob && conversion.convertedFilename && (
                             <Button
-                              size="sm"
+                              size={isMobile ? "default" : "sm"}
                               onClick={() => downloadFile(conversion)}
-                              className="bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white"
+                              className={`bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white ${isMobile ? 'w-full' : ''}`}
                             >
                               <Download className="w-3 h-3 mr-1" />
                               Download
@@ -352,9 +352,10 @@ const Convert = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => removeConversion(conversion.id)}
-                            className="w-8 h-8"
+                            className={isMobile ? 'w-full' : 'w-8 h-8'}
                           >
                             <X className="w-4 h-4" />
+                            {isMobile && <span className="ml-2">Remove</span>}
                           </Button>
                         </div>
                       </div>
