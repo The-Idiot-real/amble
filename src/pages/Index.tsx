@@ -170,8 +170,10 @@ const Index = () => {
       />
       
       <main className="container mx-auto px-4 py-8 pt-24">
-        {files.length === 0 && !isLoading && !searchQuery && <HeroSection />}
+        {/* Always show hero section */}
+        {!searchQuery && <HeroSection />}
         
+        {/* Recent Files section */}
         <div ref={searchResultsRef}>
           <ModernFileGrid
             files={files}

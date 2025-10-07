@@ -90,11 +90,11 @@ export const ModernFileGrid = ({
       {/* Results header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">
-            {searchQuery ? `Search Results` : 'Your Files'}
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            {searchQuery ? `Search Results` : 'Recent Files'} ✨
           </h2>
-          <p className="text-muted-foreground mt-1">
-            {totalCount} {totalCount === 1 ? 'file' : 'files'}
+          <p className="text-[rgb(56,209,120)] mt-1">
+            {totalCount} {totalCount === 1 ? 'file' : 'files'} available for download
             {searchQuery && ` matching "${searchQuery}"`}
           </p>
         </div>
