@@ -385,25 +385,33 @@ const Convert = () => {
                             </div>
                           </div>
                         </div>
-                        <div className={`flex items-center ${isMobile ? 'flex-col gap-2 w-full' : 'space-x-2'}`}>
+                        <div className={`flex items-center ${isMobile ? 'flex-col gap-2 w-full' : 'space-x-2'} relative z-10`}>
                           {conversion.status === 'completed' && (
-                            <Button
-                              size={isMobile ? "default" : "sm"}
-                              onClick={() => {
-                                console.log('Button clicked for conversion:', conversion.id);
+                            <button
+                              onClick={(e) => {
+                                console.log('=== RAW BUTTON CLICK ===');
+                                console.log('Event:', e);
+                                console.log('Target:', e.target);
+                                console.log('Conversion:', conversion);
+                                e.preventDefault();
+                                e.stopPropagation();
                                 downloadFile(conversion);
                               }}
-                              type="button"
-                              className={`bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white ${isMobile ? 'w-full' : ''}`}
+                              style={{ pointerEvents: 'auto', cursor: 'pointer', zIndex: 100 }}
+                              className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white h-9 px-4 py-2 ${isMobile ? 'w-full h-10' : ''}`}
                             >
-                              <Download className={`${isMobile ? 'w-4 h-4' : 'w-3 h-3'} mr-1`} />
+                              <Download className={`${isMobile ? 'w-4 h-4' : 'w-3 h-3'}`} />
                               Download
-                            </Button>
+                            </button>
                           )}
                           <Button
                             variant="ghost"
                             size={isMobile ? "default" : "icon"}
-                            onClick={() => removeConversion(conversion.id)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              removeConversion(conversion.id);
+                            }}
                             type="button"
                             className={isMobile ? 'w-full' : 'w-8 h-8'}
                           >
