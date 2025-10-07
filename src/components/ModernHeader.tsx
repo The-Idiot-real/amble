@@ -124,7 +124,7 @@ export const ModernHeader = ({
             <div className="transform transition-transform group-hover:scale-110">
               <ImprovedAmbleLogo size={40} />
             </div>
-            <span className="font-bold text-xl bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">Amble</span>
+            <span className="font-bold text-xl bg-gradient-to-r from-[rgb(53,145,181)] to-[rgb(56,209,120)] bg-clip-text text-transparent">Amble</span>
           </Link>
 
           {/* Desktop Navigation */}

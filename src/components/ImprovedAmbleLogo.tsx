@@ -17,13 +17,13 @@ export const ImprovedAmbleLogo: React.FC<ImprovedAmbleLogoProps> = ({ className 
     >
       <defs>
         <linearGradient id="ambleMainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#f59e0b" />
-          <stop offset="50%" stopColor="#f97316" />
-          <stop offset="100%" stopColor="#ea580c" />
+          <stop offset="0%" stopColor="rgb(53, 145, 181)" />
+          <stop offset="50%" stopColor="rgb(56, 209, 120)" />
+          <stop offset="100%" stopColor="rgb(56, 209, 120)" />
         </linearGradient>
         <linearGradient id="ambleAccentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fbbf24" />
-          <stop offset="100%" stopColor="#f59e0b" />
+          <stop offset="0%" stopColor="rgb(53, 145, 181)" />
+          <stop offset="100%" stopColor="rgb(56, 209, 120)" />
         </linearGradient>
         <filter id="shadow">
           <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/>
@@ -56,9 +56,9 @@ export const ImprovedAmbleLogo: React.FC<ImprovedAmbleLogoProps> = ({ className 
       <line x1="40" y1="42" x2="55" y2="42" stroke="white" strokeWidth="2" strokeLinecap="round" />
       
       {/* Accent Dots */}
-      <circle cx="30" cy="50" r="3" fill="#f59e0b" filter="url(#shadow)" />
-      <circle cx="50" cy="35" r="4" fill="#ea580c" filter="url(#shadow)" />
-      <circle cx="70" cy="40" r="3" fill="#fbbf24" filter="url(#shadow)" />
+      <circle cx="30" cy="50" r="3" fill="rgb(53, 145, 181)" filter="url(#shadow)" />
+      <circle cx="50" cy="35" r="4" fill="rgb(56, 209, 120)" filter="url(#shadow)" />
+      <circle cx="70" cy="40" r="3" fill="rgb(53, 145, 181)" filter="url(#shadow)" />
     </svg>
   );
 };
