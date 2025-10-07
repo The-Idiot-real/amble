@@ -100,11 +100,11 @@ export const ModernFileGrid = ({
         </div>
       </div>
 
-      {/* Files grid */}
+      {/* Files grid - 3 rows x 4 columns (12 items per page) */}
       <div className={`grid gap-6 ${
         isMobile 
           ? 'grid-cols-1' 
-          : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
       }`}>
         {files.map((file) => {
           const FileIcon = getFileIcon(file.type);

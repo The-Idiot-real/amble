@@ -2,44 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Vibrant Interactive Design System */
+/* Blue-Green Gradient Theme */
 :root {
-  /* Super Vibrant Light Mode - Exciting Colors! */
-  --background: 200 80% 97%;
-  --foreground: 220 30% 10%;
-  --card: 180 70% 98%;
-  --card-foreground: 220 30% 10%;
-  --popover: 180 70% 98%;
-  --popover-foreground: 220 30% 10%;
-  --primary: 180 95% 45%;
-  --primary-dark: 180 95% 38%;
+  /* Light Mode - Blue to Green */
+  --background: 210 20% 98%;
+  --foreground: 210 15% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 15% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 15% 10%;
+  --primary: 195 55% 45%;
+  --primary-dark: 195 55% 38%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 280 75% 65%;
+  --secondary: 160 45% 50%;
   --secondary-foreground: 0 0% 100%;
-  --muted: 210 50% 92%;
-  --muted-foreground: 220 20% 45%;
-  --accent: 320 90% 60%;
+  --muted: 210 20% 96%;
+  --muted-foreground: 210 15% 45%;
+  --accent: 170 50% 55%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 95% 65%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 190 40% 85%;
-  --input: 190 40% 85%;
-  --ring: 180 95% 45%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 210 20% 90%;
+  --input: 210 20% 90%;
+  --ring: 195 55% 45%;
   --radius: 1rem;
   
-  /* Ultra Vibrant Multi-Color Gradients */
-  --gradient-primary: linear-gradient(135deg, hsl(180 95% 45%), hsl(200 100% 50%));
-  --gradient-secondary: linear-gradient(135deg, hsl(280 75% 65%), hsl(320 90% 60%));
-  --gradient-fun: linear-gradient(135deg, hsl(180 95% 45%) 0%, hsl(280 75% 65%) 50%, hsl(320 90% 60%) 100%);
-  --gradient-bg: linear-gradient(135deg, hsl(200 80% 97%) 0%, hsl(180 70% 95%) 30%, hsl(280 60% 96%) 70%, hsl(320 70% 97%) 100%);
-  --gradient-card: linear-gradient(135deg, hsl(180 70% 98%) 0%, hsl(200 65% 97%) 100%);
+  /* Blue-Green Gradients */
+  --gradient-primary: linear-gradient(90deg, rgb(53, 145, 181), rgb(56, 209, 120));
+  --gradient-secondary: linear-gradient(180deg, hsl(210, 20%, 95%), hsl(210, 20%, 96%));
+  --gradient-fun: linear-gradient(90deg, rgb(53, 145, 181), rgb(56, 209, 120));
+  --gradient-bg: linear-gradient(135deg, hsl(210, 20%, 97%) 0%, hsl(190, 25%, 95%) 50%, hsl(170, 20%, 96%) 100%);
+  --gradient-card: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, hsl(210, 20%, 99%) 100%);
   
-  /* Vibrant Colorful Shadows */
-  --shadow-card: 0 6px 20px hsl(180 95% 45% / 0.15), 0 3px 10px hsl(280 75% 65% / 0.10);
-  --shadow-upload: 0 10px 30px hsl(180 95% 45% / 0.22), 0 5px 15px hsl(320 90% 60% / 0.15);
-  --shadow-glow: 0 0 40px hsl(180 95% 45% / 0.35), 0 0 20px hsl(320 90% 60% / 0.20);
-  --shadow-hover: 0 15px 40px hsl(180 95% 45% / 0.30), 0 8px 20px hsl(280 75% 65% / 0.20);
-  --shadow-multi: 0 10px 30px hsl(180 95% 45% / 0.25), 0 5px 15px hsl(280 75% 65% / 0.20), 0 2px 8px hsl(320 90% 60% / 0.15);
+  /* Blue-Green Shadows */
+  --shadow-card: 0 6px 20px rgba(53, 145, 181, 0.12), 0 3px 10px rgba(56, 209, 120, 0.08);
+  --shadow-upload: 0 10px 30px rgba(53, 145, 181, 0.18), 0 5px 15px rgba(56, 209, 120, 0.12);
+  --shadow-glow: 0 0 40px rgba(53, 145, 181, 0.25), 0 0 20px rgba(56, 209, 120, 0.15);
+  --shadow-hover: 0 15px 40px rgba(53, 145, 181, 0.22), 0 8px 20px rgba(56, 209, 120, 0.15);
+  --shadow-multi: 0 10px 30px rgba(53, 145, 181, 0.18), 0 5px 15px rgba(56, 209, 120, 0.15), 0 2px 8px rgba(53, 145, 181, 0.1);
   
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
@@ -52,41 +52,41 @@
 }
 
 .dark {
-  /* Super Vibrant Dark Mode - Neon Glow! */
-  --background: 220 50% 8%;
-  --foreground: 180 30% 98%;
-  --card: 220 45% 10%;
-  --card-foreground: 180 30% 98%;
-  --popover: 220 45% 10%;
-  --popover-foreground: 180 30% 98%;
-  --primary: 180 95% 55%;
-  --primary-dark: 180 95% 48%;
+  /* Dark Mode - Blue to Green */
+  --background: 210 30% 10%;
+  --foreground: 210 10% 98%;
+  --card: 210 25% 15%;
+  --card-foreground: 210 10% 98%;
+  --popover: 210 25% 15%;
+  --popover-foreground: 210 10% 98%;
+  --primary: 195 60% 55%;
+  --primary-dark: 195 60% 48%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 280 75% 70%;
-  --secondary-foreground: 220 50% 8%;
-  --muted: 220 35% 16%;
-  --muted-foreground: 200 20% 75%;
-  --accent: 320 90% 68%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 85% 62%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 220 35% 22%;
-  --input: 220 35% 22%;
-  --ring: 180 95% 55%;
+  --secondary: 160 50% 55%;
+  --secondary-foreground: 210 15% 10%;
+  --muted: 210 15% 20%;
+  --muted-foreground: 210 10% 60%;
+  --accent: 170 55% 60%;
+  --accent-foreground: 210 15% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 210 15% 25%;
+  --input: 210 15% 25%;
+  --ring: 195 60% 55%;
 
-  /* Ultra Vibrant Dark Gradients with Intense Glow */
-  --gradient-primary: linear-gradient(135deg, hsl(180 95% 55%), hsl(200 100% 60%));
-  --gradient-secondary: linear-gradient(135deg, hsl(280 75% 70%), hsl(320 90% 68%));
-  --gradient-fun: linear-gradient(135deg, hsl(180 95% 55%) 0%, hsl(280 75% 70%) 50%, hsl(320 90% 68%) 100%);
-  --gradient-bg: linear-gradient(135deg, hsl(220 50% 8%) 0%, hsl(220 45% 11%) 30%, hsl(280 45% 12%) 70%, hsl(320 50% 10%) 100%);
-  --gradient-card: linear-gradient(135deg, hsl(220 45% 10%) 0%, hsl(220 40% 13%) 100%);
+  /* Dark Blue-Green Gradients */
+  --gradient-primary: linear-gradient(90deg, rgb(53, 145, 181), rgb(56, 209, 120));
+  --gradient-secondary: linear-gradient(180deg, hsl(210, 15%, 20%), hsl(210, 15%, 15%));
+  --gradient-fun: linear-gradient(90deg, rgb(53, 145, 181), rgb(56, 209, 120));
+  --gradient-bg: linear-gradient(135deg, hsl(210, 30%, 10%) 0%, hsl(200, 25%, 12%) 50%, hsl(180, 20%, 14%) 100%);
+  --gradient-card: linear-gradient(135deg, hsl(210, 25%, 15%) 0%, hsl(210, 20%, 18%) 100%);
   
-  /* Intense Neon Glow Shadows */
-  --shadow-card: 0 8px 30px hsl(180 95% 55% / 0.30), 0 4px 15px hsl(280 75% 70% / 0.20);
-  --shadow-upload: 0 12px 45px hsl(180 95% 55% / 0.40), 0 6px 22px hsl(320 90% 68% / 0.25);
-  --shadow-glow: 0 0 60px hsl(180 95% 55% / 0.50), 0 0 30px hsl(320 90% 68% / 0.35);
-  --shadow-hover: 0 18px 60px hsl(180 95% 55% / 0.45), 0 10px 30px hsl(280 75% 70% / 0.30);
-  --shadow-multi: 0 12px 40px hsl(180 95% 55% / 0.35), 0 6px 20px hsl(280 75% 70% / 0.30), 0 3px 10px hsl(320 90% 68% / 0.25);
+  /* Dark Blue-Green Glow Shadows */
+  --shadow-card: 0 8px 30px rgba(53, 145, 181, 0.25), 0 4px 15px rgba(56, 209, 120, 0.15);
+  --shadow-upload: 0 12px 45px rgba(53, 145, 181, 0.35), 0 6px 22px rgba(56, 209, 120, 0.20);
+  --shadow-glow: 0 0 60px rgba(53, 145, 181, 0.40), 0 0 30px rgba(56, 209, 120, 0.25);
+  --shadow-hover: 0 18px 60px rgba(53, 145, 181, 0.38), 0 10px 30px rgba(56, 209, 120, 0.22);
+  --shadow-multi: 0 12px 40px rgba(53, 145, 181, 0.30), 0 6px 20px rgba(56, 209, 120, 0.25), 0 3px 10px rgba(53, 145, 181, 0.20);
 }
 
 * {
@@ -98,6 +98,11 @@ body {
   color: hsl(var(--foreground));
   background: var(--gradient-bg);
   min-height: 100vh;
+  background-attachment: fixed;
+}
+
+.dark body {
+  background: linear-gradient(135deg, hsl(210, 30%, 8%) 0%, hsl(200, 25%, 10%) 50%, hsl(180, 20%, 12%) 100%);
   background-attachment: fixed;
 }
 

@@ -29,7 +29,7 @@ const Index = () => {
   const [previewFile, setPreviewFile] = useState<any>(null);
   const searchResultsRef = useRef(null);
   const { toast } = useToast();
-  const ITEMS_PER_PAGE = 9;
+  const ITEMS_PER_PAGE = 12;
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -162,7 +162,7 @@ const Index = () => {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-amber-50 dark:from-stone-950 dark:to-amber-950">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-teal-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <ModernHeader 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
