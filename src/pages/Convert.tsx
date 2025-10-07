@@ -180,30 +180,46 @@ const Convert = () => {
   };
 
   const downloadFile = (conversion: ConversionJob) => {
-    console.log('Download clicked:', conversion);
+    console.log('=== DOWNLOAD CLICKED ===');
+    console.log('Conversion ID:', conversion.id);
     console.log('Has blob:', !!conversion.convertedBlob);
+    console.log('Blob type:', conversion.convertedBlob?.type);
+    console.log('Blob size:', conversion.convertedBlob?.size);
     console.log('Has filename:', !!conversion.convertedFilename);
+    console.log('Filename:', conversion.convertedFilename);
+    console.log('Status:', conversion.status);
+    console.log('Full conversion object:', conversion);
     
     if (!conversion.convertedBlob || !conversion.convertedFilename) {
+      console.error('Missing blob or filename!');
       toast({
         title: "Download Failed",
-        description: "Converted file not available",
+        description: "Converted file not available. Try converting again.",
         variant: "destructive",
       });
       return;
     }
 
     try {
+      console.log('Creating object URL...');
       const url = URL.createObjectURL(conversion.convertedBlob);
+      console.log('Object URL created:', url);
+      
       const link = document.createElement('a');
       link.href = url;
       link.download = conversion.convertedFilename;
       link.style.display = 'none';
+      
+      console.log('Appending link and triggering click...');
       document.body.appendChild(link);
+      
+      // Force click
       link.click();
+      console.log('Click triggered');
       
       // Cleanup after a short delay
       setTimeout(() => {
+        console.log('Cleaning up...');
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       }, 100);
@@ -373,12 +389,11 @@ const Convert = () => {
                           {conversion.status === 'completed' && (
                             <Button
                               size={isMobile ? "default" : "sm"}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
+                              onClick={() => {
+                                console.log('Button clicked for conversion:', conversion.id);
                                 downloadFile(conversion);
                               }}
-                              disabled={!conversion.convertedBlob || !conversion.convertedFilename}
+                              type="button"
                               className={`bg-gradient-to-r from-primary to-accent hover:from-primary-dark hover:to-accent text-white ${isMobile ? 'w-full' : ''}`}
                             >
                               <Download className={`${isMobile ? 'w-4 h-4' : 'w-3 h-3'} mr-1`} />
@@ -389,6 +404,7 @@ const Convert = () => {
                             variant="ghost"
                             size={isMobile ? "default" : "icon"}
                             onClick={() => removeConversion(conversion.id)}
+                            type="button"
                             className={isMobile ? 'w-full' : 'w-8 h-8'}
                           >
                             <X className="w-4 h-4" />
