@@ -36,6 +36,17 @@ const FloatingAIChat = () => {
   }, []);
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem('ai-chat-history', JSON.stringify(messages));
     }
@@ -221,8 +232,16 @@ const FloatingAIChat = () => {
   }
 
   return (
-    <div className="ai-chat-modal" onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}>
-      <div className={`ai-chat-container ${isMobile ? 'h-full w-full' : ''}`}>
+    <div 
+      className="ai-chat-modal" 
+      onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+    >
+      <div 
+        className={`ai-chat-container ${isMobile ? 'h-full w-full' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-card border-b border-border p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
