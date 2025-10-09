@@ -254,8 +254,9 @@ const FloatingAIChat = () => {
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-4 h-[400px]" ref={scrollAreaRef}>
-          {messages.length === 0 ? (
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
+            {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
               <Bot className="h-12 w-12 mb-4 opacity-50" />
               <h4 className="font-medium mb-2">Welcome to Amble AI!</h4>
@@ -311,7 +312,8 @@ const FloatingAIChat = () => {
               <div ref={messagesEndRef} />
             </div>
           )}
-        </ScrollArea>
+          </ScrollArea>
+        </div>
 
         {/* File attachments */}
         {attachedFiles.length > 0 && (
