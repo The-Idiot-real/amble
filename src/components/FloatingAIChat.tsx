@@ -143,7 +143,7 @@ const FloatingAIChat = () => {
         mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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',
+          'Authorization': 'Bearer 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',
           'Accept': 'application/json',
         },
         body: JSON.stringify(requestBody),

@@ -186,10 +186,10 @@ body {
 
 /* AI Chat Styles */
 .ai-bubble {
-  @apply fixed bottom-8 right-8 w-16 h-16 rounded-full cursor-pointer flex items-center justify-center transition-all duration-300 hover:scale-110;
+  @apply fixed bottom-4 right-4 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 rounded-full cursor-pointer flex items-center justify-center transition-all duration-300 hover:scale-110;
   background: var(--gradient-primary);
   box-shadow: var(--shadow-glow);
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .ai-chat-modal {

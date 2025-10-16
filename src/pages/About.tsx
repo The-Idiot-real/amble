@@ -1,17 +1,8 @@
 import { ModernHeader } from "@/components/ModernHeader";
 import { Shield, Zap, Users, Heart } from "lucide-react";
-import { useEffect, useState } from "react";
-import { getStats, AppStats } from "@/lib/fileStorage";
+import { useRealStats } from "@/hooks/useRealStats";
 const About = () => {
-  const [stats, setStats] = useState<AppStats>({
-    totalFiles: 0,
-    totalUsers: 1,
-    totalDownloads: 0,
-    totalConverts: 0
-  });
-  useEffect(() => {
-    setStats(getStats());
-  }, []);
+  const { stats, loading } = useRealStats();
   const features = [{
     icon: Shield,
     title: "Secure & Private",
