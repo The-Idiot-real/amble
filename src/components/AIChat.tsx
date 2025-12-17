@@ -40,7 +40,7 @@ const AIChat = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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',
+          'Authorization': 'Bearer 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',
         },
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
